@@ -28,6 +28,8 @@ def generate_student_preferences(students, schools, noisy_achievements, weights)
     # Calculate the average income of all students
     avg_income = np.mean([student.income for student in students])
 
+    utilities = {}  # Dictionary to store utilities for visualization
+
     # For each student, calculate preferences for schools based on utilities
     for student, noisy_achievement in zip(students, noisy_achievements):
         # Adjust weight for quality based on student's income (higher income -> more weight on quality)
@@ -42,15 +44,22 @@ def generate_student_preferences(students, schools, noisy_achievements, weights)
 
         # Calculate utility for each school and store the preference list
         preferences = []
+        student_utilities = []  # List to store utilities for this student
         for school in schools:
             utility = calculate_student_utility(student, school, avg_income, noisy_achievement, weight_distance,
                                                 weight_quality, weight_income, weight_aspiration)
             preferences.append((utility, school.id))
+            student_utilities.append(utility)  # Collect utility for visualization
+            #print(f"Student {student.id}, School {school.id}, Utility: {utility:.2f}")  # Print utility
+
+        utilities[student.id] = student_utilities  # Store utilities for the student
 
         # Sort preferences by utility (descending order)
         preferences.sort(reverse=True, key=lambda x: x[0])
         # Store only the school IDs, sorted by preference
         student.preferences = [school_id for _, school_id in preferences]
+
+    return utilities  # Return utilities for visualization
 
 
 # Function to calculate the utility of a school from admitting a specific student
@@ -109,3 +118,5 @@ def run_simulation(num_students, num_schools, grid_size, weights):
 
     for school in schools[:5]:
         print(f"School {school.id} preferences: {school.preferences}")
+
+    return students, schools  # Returning the data for further use

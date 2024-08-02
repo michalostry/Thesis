@@ -11,10 +11,10 @@ def deferred_acceptance(student_preferences_dict, school_preferences_dict, schoo
     #for school_id, preferences in school_preferences_dict.items():
     #    print(f"School {school_id}: {preferences}")
 
-    # Print initial capacities of schools
-    print("\nInitial School Capacities:")
-    for school_id, capacity in schools_capacity.items():
-        print(f"School {school_id} Capacity: {capacity}")
+    # # Print initial capacities of schools
+    # print("\nInitial School Capacities:")
+    # for school_id, capacity in schools_capacity.items():
+    #     print(f"School {school_id} Capacity: {capacity}")
 
     # Calculate total capacity
     total_capacity = sum(schools_capacity.values())
@@ -37,7 +37,7 @@ def deferred_acceptance(student_preferences_dict, school_preferences_dict, schoo
         new_unmatched_students = set()
         changes = False  # Assume no changes happen until we find otherwise
 
-        print(f"\n--- Round {round_number} ---")
+        #print(f"\n--- Round {round_number} ---")
         #print("Unmatched students:", unmatched_students)
 
         for student_id in unmatched_students:

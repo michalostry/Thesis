@@ -33,7 +33,7 @@ class School:
 # Function to generate synthetic data for a given number of students and schools
 def generate_synthetic_data(num_students, num_schools, grid_size):
     # disable next line later for monte carlo simulation
-    #np.random.seed(42)  # Set a random seed for reproducibility
+    np.random.seed(46)  # Set a random seed for reproducibility
 
     student_data = []
     # Mean and standard deviation for income and achievement distributions

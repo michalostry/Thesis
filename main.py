@@ -1,21 +1,21 @@
 import numpy as np
-import pandas as pd
+import random
+from src.other_functions import save_to_csv
 from src.simulation import generate_student_preferences, generate_school_preferences
 from src.data_generation import generate_synthetic_data
 from src.visualizations import (visualize_initial_locations,
                                 plot_noisy_vs_true_achievements,
                                 visualize_final_matches,
-                                visualize_difference_in_matches)
+                                visualize_difference_in_matches,
+                                visualize_utilities)
 from src.gale_shapley import deferred_acceptance
 from src.analysis import compute_preference_statistics, compute_average_rank_distance
 
-#hello 2
-
 if __name__ == "__main__":
     # Set parameters for the simulation
-    num_students = 1800
-    num_schools = 10
-    grid_size = 500
+    num_students = 900
+    num_schools = 5
+    grid_size = 5000
     weights = (0.2, 0.2, 0.2, 0.4)  # Weights for Distance, Quality, Income, Aspiration in student utility function
     noise_sd = 20
 
@@ -38,9 +38,22 @@ if __name__ == "__main__":
 
     print("\nGenerating preferences based on true achievements...")
     # Generate preferences based on true achievement
-    generate_student_preferences(students, schools, [student.achievement for student in students], weights)
+    utilities = generate_student_preferences(students, schools, [student.achievement for student in students], weights)
     generate_school_preferences(students, schools)
     print("Preferences based on true achievements generated.")
+
+    # Select 5 random students to display full utility details
+    random_students = random.sample(students, 1)
+
+    # # Print full utility details for these  students
+    # for student in random_students:
+    #     print(f"\n--- Student {student.id} Utility Details ---")
+    #     print(f"Location: {student.location}, Income: {student.income}, Achievement: {student.achievement}")
+    #     for school_id, utility in zip(range(len(student.preferences)), utilities[student.id]):
+    #         print(f"School {school_id}: Utility = {utility:.2f}")
+
+    # Visualize the utilities
+    visualize_utilities(students[:5], schools, utilities)
 
     # Store preferences after the true condition for comparison
     true_preferences = [student.preferences[:] for student in students]
@@ -145,3 +158,6 @@ if __name__ == "__main__":
     print(f"Unmatched: {noisy_unmatched_percentage:.2f}%")
 
     print(f"\nAverage rank distance between noisy and true matches: {average_rank_distance:.2f}")
+
+# Save the generated data, matches, and preferences to CSV files
+save_to_csv(students, schools, final_matches_true, final_matches_noisy, true_preferences, noisy_preferences)
