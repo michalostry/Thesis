@@ -16,32 +16,34 @@ from src.analysis import compute_preference_statistics, compute_average_rank_dis
 
 if __name__ == "__main__":
     # Set parameters for the simulation
-    num_students = 2000
-    num_schools = 10
+    num_students = 5
+    num_schools = 2
     grid_size = 50000
     weights = (0.3, 0.3, 0, 0.4)  # Weights for Distance, Quality, Income, Aspiration in student utility function
     #income currently 0 because it is not implemented yet
     noise_sd = 20
     debug_ids = []
+    print_info = 0 #1 - yes, 0 - no
 
     total_weight = sum(weights)
     if total_weight != 1:
         print("Total weight are not 1! Weights should add to 1.")
 
     # Print initial settings
-    print(f"---- Initial Settings: -----\n"
-          f"Number of Students: {num_students}\n"
-          f"Number of Schools: {num_schools}\n"
-          f"Grid Size: {grid_size}\n"
-          f"Weights: {weights}\n"
-          f"Weights: Distance, Quality, Income, Aspiration\n"
-          f"Noise Standard Deviation: {noise_sd}\n"
-          f"Students ID to debug: {debug_ids}\n")
+    if print_info == 1:
+        print(f"---- Initial Settings: -----\n"
+              f"Number of Students: {num_students}\n"
+              f"Number of Schools: {num_schools}\n"
+              f"Grid Size: {grid_size}\n"
+              f"Weights: {weights}\n"
+              f"Weights: Distance, Quality, Income, Aspiration\n"
+              f"Noise Standard Deviation: {noise_sd}\n"
+              f"Students ID to debug: {debug_ids}\n")
 
-    print("STEP 1 >>>> Starting synthetic data generation...")
+    if print_info == 1: print("STEP 1 >>>> Starting synthetic data generation...")
     # Generate synthetic data for students and schools
     students, schools = generate_synthetic_data(num_students, num_schools, grid_size)
-    print("Synthetic data generated.")
+    if print_info == 1: print("Synthetic data generated.")
 
     # Visualize initial student and school locations
     #visualize_initial_locations(students, schools, grid_size)
@@ -49,7 +51,7 @@ if __name__ == "__main__":
     # Calculate min and max values for normalization
     min_max_values = get_min_max_values(students, schools)
 
-    print("\nSTEP 2 >>>> Generating preferences based on true achievements...")
+    if print_info == 1:print("\nSTEP 2 >>>> Generating preferences based on true achievements...")
     # Define true achievements
     true_achievements = [student.achievement for student in students]  # Extract true achievements
     # Generate preferences based on true achievement
@@ -60,20 +62,20 @@ if __name__ == "__main__":
                                              debug_ids,
                                              min_max_values)
     generate_school_preferences(students, schools)
-    print("Preferences based on true achievements generated.")
+    if print_info == 1:print("Preferences based on true achievements generated.")
 
     # Store preferences after the true condition for comparison
     true_preferences = [student.preferences[:] for student in students]
 
-    print("\nSTEP 3 >>>> Running Deferred Acceptance with true preferences...")
+    if print_info == 1:print("\nSTEP 3 >>>> Running Deferred Acceptance with true preferences...")
     # Run DA with true preferences
     student_preferences_true_dict = {student.id: student.preferences for student in students}
     school_preferences_dict = {school.id: school.preferences for school in schools}
     schools_capacity = {school.id: school.capacity for school in schools}
     final_matches_true = deferred_acceptance(student_preferences_true_dict, school_preferences_dict, schools_capacity)
-    print("Deferred Acceptance with true preferences completed.")
+    if print_info == 1:print("Deferred Acceptance with true preferences completed.")
 
-    print("\nSTEP 4 >>>> Introducing noise to achievements and generating preferences...")
+    if print_info == 1:print("\nSTEP 4 >>>> Introducing noise to achievements and generating preferences...")
     # Add noise to achievements
     noisy_achievements = np.random.normal([student.achievement for student in students], noise_sd)
     noisy_achievements = np.clip(noisy_achievements, 0, 100)  # Ensure values stay within 0-100
@@ -83,26 +85,27 @@ if __name__ == "__main__":
                                  weights,
                                  debug_ids,
                                  min_max_values)
-    print("Preferences based on noisy achievements generated.")
+    if print_info == 1:print("Preferences based on noisy achievements generated.")
 
     # Store preferences after the noisy condition for comparison
     noisy_preferences = [student.preferences[:] for student in students]
 
-    print("\nSTEP 5 >>>> Running Deferred Acceptance with noisy preferences...")
+    if print_info == 1:print("\nSTEP 5 >>>> Running Deferred Acceptance with noisy preferences...")
     # Run DA with noisy preferences
     student_preferences_noisy_dict = {student.id: student.preferences for student in students}
     final_matches_noisy = deferred_acceptance(student_preferences_noisy_dict, school_preferences_dict, schools_capacity)
-    print("Deferred Acceptance with noisy preferences completed.")
+    if print_info == 1:print("Deferred Acceptance with noisy preferences completed.")
 
-    print("\n >>> SIMULATION COMPLETED <<<")
+    if print_info == 1:print("\n >>> SIMULATION COMPLETED <<<")
 
 
     # Calculate total capacity
     total_capacity = sum(schools_capacity.values())
     # Print total capacity
-    print(f"\nTotal School Capacity: {total_capacity}")
-    print(f"Number of Students: {num_students}")
-    print(f"Empty school spots: {total_capacity - num_students}")
+    if print_info == 1:
+        print(f"\nTotal School Capacity: {total_capacity}")
+        print(f"Number of Students: {num_students}")
+        print(f"Empty school spots: {total_capacity - num_students}")
 
     #Visualize the utilities
     #visualize_utilities(students[:5], schools, utilities)
@@ -144,27 +147,29 @@ if __name__ == "__main__":
     average_rank_distance = compute_average_rank_distance(final_matches_noisy,
                                                           final_matches_true,
                                                           true_preferences,
-                                                          noisy_preferences)
+                                                          noisy_preferences,
+                                                          debug_ids)
 
-    print("\nStatistics for True Preferences:")
-    print(f"1st choice: {true_percentages[0]:.2f}%")
-    print(f"2nd choice: {true_percentages[1]:.2f}%")
-    print(f"3rd choice: {true_percentages[2]:.2f}%")
-    print(f"4th choice: {true_percentages[3]:.2f}%")
-    print(f"5th choice: {true_percentages[4]:.2f}%")
-    print(f"Other choices: {true_percentages[5]:.2f}%")
-    print(f"Unmatched: {true_unmatched_percentage:.2f}%")
+    if print_info == 1:
+        print("\nStatistics for True Preferences:")
+        print(f"1st choice: {true_percentages[0]:.2f}%")
+        print(f"2nd choice: {true_percentages[1]:.2f}%")
+        print(f"3rd choice: {true_percentages[2]:.2f}%")
+        print(f"4th choice: {true_percentages[3]:.2f}%")
+        print(f"5th choice: {true_percentages[4]:.2f}%")
+        print(f"Other choices: {true_percentages[5]:.2f}%")
+        print(f"Unmatched: {true_unmatched_percentage:.2f}%")
 
-    print("\nStatistics for Noisy Preferences:")
-    print(f"1st choice: {noisy_percentages[0]:.2f}%")
-    print(f"2nd choice: {noisy_percentages[1]:.2f}%")
-    print(f"3rd choice: {noisy_percentages[2]:.2f}%")
-    print(f"4th choice: {noisy_percentages[3]:.2f}%")
-    print(f"5th choice: {noisy_percentages[4]:.2f}%")
-    print(f"Other choices: {noisy_percentages[5]:.2f}%")
-    print(f"Unmatched: {noisy_unmatched_percentage:.2f}%")
+        print("\nStatistics for Noisy Preferences:")
+        print(f"1st choice: {noisy_percentages[0]:.2f}%")
+        print(f"2nd choice: {noisy_percentages[1]:.2f}%")
+        print(f"3rd choice: {noisy_percentages[2]:.2f}%")
+        print(f"4th choice: {noisy_percentages[3]:.2f}%")
+        print(f"5th choice: {noisy_percentages[4]:.2f}%")
+        print(f"Other choices: {noisy_percentages[5]:.2f}%")
+        print(f"Unmatched: {noisy_unmatched_percentage:.2f}%")
 
-    print(f"\nAverage rank distance between noisy and true matches: {average_rank_distance:.4f}")
+        print(f"\nAverage rank distance between noisy and true matches: {average_rank_distance:.4f}")
 
 # Save the data to CSV files
 save_to_csv(students,

@@ -1,3 +1,5 @@
+print_info = 1 #1 - yes, 0 - no
+
 import numpy as np
 from scipy.stats import rankdata
 from scipy.spatial.distance import pdist, squareform
