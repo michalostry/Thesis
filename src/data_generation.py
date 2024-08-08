@@ -1,4 +1,5 @@
-print_info = 1 #1 - yes, 0 - no
+print_info = 0 #1 - yes, 0 - no
+set_seed = 0 #1 - yes, 0 - no
 
 import numpy as np
 from scipy.stats import rankdata
@@ -47,7 +48,7 @@ def generate_spatially_correlated_data(locations, mean, std, correlation_length)
 
 # Function to generate synthetic data for a given number of students and schools
 def generate_synthetic_data(num_students, num_schools, grid_size, correlation_length=1000):
-    np.random.seed(46)  # Set a random seed for reproducibility
+    if set_seed == 1: np.random.seed(46)  # Set a random seed for reproducibility
 
     # Mean and standard deviation for income and achievement distributions
     income_mean = 50

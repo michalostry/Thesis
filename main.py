@@ -22,7 +22,7 @@ if __name__ == "__main__":
     weights = (0.3, 0.3, 0, 0.4)  # Weights for Distance, Quality, Income, Aspiration in student utility function
     #income currently 0 because it is not implemented yet
     noise_sd = 20
-    debug_ids = []
+    debug_ids = [] #empty for no debug
     print_info = 0 #1 - yes, 0 - no
 
     total_weight = sum(weights)
@@ -45,8 +45,9 @@ if __name__ == "__main__":
     students, schools = generate_synthetic_data(num_students, num_schools, grid_size)
     if print_info == 1: print("Synthetic data generated.")
 
+
     # Visualize initial student and school locations
-    #visualize_initial_locations(students, schools, grid_size)
+    if print_info == 1: visualize_initial_locations(students, schools, grid_size)
 
     # Calculate min and max values for normalization
     min_max_values = get_min_max_values(students, schools)
@@ -108,7 +109,7 @@ if __name__ == "__main__":
         print(f"Empty school spots: {total_capacity - num_students}")
 
     #Visualize the utilities
-    #visualize_utilities(students[:5], schools, utilities)
+    if print_info == 1:visualize_utilities(students[:5], schools, utilities)
 
     #avg RANK CALCULATION
     for student_id, noisy_match in final_matches_noisy.items():
@@ -124,17 +125,21 @@ if __name__ == "__main__":
             rank_distance = noisy_rank_in_true - true_rank
 
             #Print for debugging
-            # print(f"Student {student_id}: True School = {matched_school_true}, Noisy School = {noisy_match}, "
-            #      f"True Rank = {true_rank}, Noisy Rank in True Preferences = {noisy_rank_in_true}, Distance = {rank_distance}")
+            if print_info == 1:
+                print(f"Student {student_id}: True School = {matched_school_true},"
+                      f" Noisy School = {noisy_match},"
+                      f" "f"True Rank = {true_rank},"
+                      f" Noisy Rank in True Preferences = {noisy_rank_in_true},"
+                      f" Distance = {rank_distance}")
 
     # Visualize the final matches under both conditions
-    #visualize_final_matches(final_matches_noisy, final_matches_true, schools)
+    if print_info == 1:visualize_final_matches(final_matches_noisy, final_matches_true, schools)
 
     # Visualize the difference in matches between the true and noisy conditions
-    #visualize_difference_in_matches(final_matches_noisy, final_matches_true)
+    if print_info == 1:visualize_difference_in_matches(final_matches_noisy, final_matches_true)
 
     # visualize true vs noisy achievements
-    #plot_noisy_vs_true_achievements(students, noisy_achievements)
+    if print_info == 1:plot_noisy_vs_true_achievements(students, noisy_achievements)
 
 # Compute statistics
     true_percentages, true_unmatched_percentage = compute_preference_statistics(final_matches_true,

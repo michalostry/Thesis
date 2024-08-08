@@ -10,6 +10,13 @@ def visualize_initial_locations(students, schools, grid_size):
                 [school.location[1] for school in schools], c='red', label='Schools', marker='x')
     plt.xlim(0, grid_size)
     plt.ylim(0, grid_size)
+
+    # Add labels (IDs) for students and schools
+    for student in students:
+        plt.annotate(student.id, (student.location[0], student.location[1]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=8, color='blue')
+    for school in schools:
+        plt.annotate(school.id, (school.location[0], school.location[1]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=8, color='red')
+
     plt.title("Initial Student and School Locations")
     plt.legend()
     plt.show()
