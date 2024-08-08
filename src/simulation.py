@@ -1,27 +1,45 @@
 import numpy as np
-from src.data_generation import Student, School, generate_synthetic_data
+from src.data_generation import (Student,
+                                 School,
+                                 generate_synthetic_data)
 
 
 # Function to calculate the utility of a student attending a specific school
 def calculate_student_utility(student, school, avg_income, noisy_achievement, weight_distance, weight_quality,
-                              weight_income, weight_aspiration):
+                              weight_income, weight_aspiration, grid_size, debug_ids=None):
     # Calculate the Euclidean distance between the student's location and the school's location
     distance = np.linalg.norm(student.location - school.location)
 
-    # The utility components are calculated based on the specified weights
-    quality_term = weight_quality * school.quality  # Contribution of school quality to utility
-    distance_term = weight_distance * distance  # Contribution of distance to utility (negative since distance is a cost)
-    income_term = weight_income * avg_income  # Contribution of average income to utility
-    aspiration_term = -weight_aspiration * (
-                school.quality - noisy_achievement) ** 2  # Aspiration term penalizes mismatch
+    # Normalize the distance by the maximum possible distance on the grid
+    max_distance = np.sqrt(2) * grid_size  # Maximum distance on a square grid of size grid_size
+    normalized_distance = distance / max_distance
+
+    # Calculate utility components
+    quality_term = weight_quality * school.quality
+    distance_term = weight_distance * normalized_distance
+    income_term = weight_income * avg_income
+    aspiration_term = -weight_aspiration * (school.quality - noisy_achievement) ** 2
 
     # Total utility is the sum of these components
-    utility = quality_term - distance_term + income_term + aspiration_term
-    return utility
+    total_utility = quality_term - distance_term + income_term + aspiration_term
+
+    # Debugging: Print components if student ID is in the debug list
+    if debug_ids and student.id in debug_ids:
+        print(f"\n--- Debugging Student {student.id} ---")
+        print(f"  School {school.id}:")
+        print(f"    Distance Component: -{distance_term:.2f}")
+        print(f"    Quality Component: {quality_term:.2f}")
+        print(f"    Income Component: {income_term:.2f}")
+        print(f"    Aspiration Component: {aspiration_term:.2f}")
+        print(f"    Total Utility: {total_utility:.2f}")
+
+    return total_utility, distance_term, quality_term, income_term, aspiration_term
+
+
 
 
 # Function to generate students' preferences for schools based on their utilities
-def generate_student_preferences(students, schools, noisy_achievements, weights):
+def generate_student_preferences(students, schools, noisy_achievements, weights, grid_size, debug_ids=None):
     # Unpack weights
     weight_distance, weight_quality_base, weight_income, weight_aspiration = weights
 
@@ -46,11 +64,11 @@ def generate_student_preferences(students, schools, noisy_achievements, weights)
         preferences = []
         student_utilities = []  # List to store utilities for this student
         for school in schools:
-            utility = calculate_student_utility(student, school, avg_income, noisy_achievement, weight_distance,
-                                                weight_quality, weight_income, weight_aspiration)
+            utility, _, _, _, _ = calculate_student_utility(student, school, avg_income, noisy_achievement,
+                                                            weight_distance, weight_quality, weight_income,
+                                                            weight_aspiration, grid_size, debug_ids)
             preferences.append((utility, school.id))
             student_utilities.append(utility)  # Collect utility for visualization
-            #print(f"Student {student.id}, School {school.id}, Utility: {utility:.2f}")  # Print utility
 
         utilities[student.id] = student_utilities  # Store utilities for the student
 
@@ -60,6 +78,8 @@ def generate_student_preferences(students, schools, noisy_achievements, weights)
         student.preferences = [school_id for _, school_id in preferences]
 
     return utilities  # Return utilities for visualization
+
+
 
 
 # Function to calculate the utility of a school from admitting a specific student
@@ -86,37 +106,3 @@ def generate_school_preferences(students, schools, weight_income=1.0, weight_ach
         preferences.sort(reverse=True, key=lambda x: x[0])
         # Store only the student IDs, sorted by preference
         school.preferences = [student_id for _, student_id in preferences]
-
-
-# Function to run the overall simulation
-def run_simulation(num_students, num_schools, grid_size, weights):
-    # Generate synthetic data for students and schools
-    students, schools = generate_synthetic_data(num_students, num_schools, grid_size)
-
-    # Condition 1: Students observe a noisy signal of their achievement
-    # Generate noisy achievements for students
-    noisy_achievements = np.random.normal([student.achievement for student in students], 5)
-
-    print("Condition 1: Noisy Achievement")
-    # Generate student and school preferences based on noisy achievements
-    generate_student_preferences(students, schools, noisy_achievements, weights)
-    generate_school_preferences(students, schools)
-
-    # Print out the preferences of the first few students for inspection
-    for student in students[:5]:
-        print(f"Student {student.id} preferences: {student.preferences}")
-
-    print("\nCondition 2: True Achievement")
-    # Condition 2: Students know their true achievement
-    # Generate student and school preferences based on true achievements
-    generate_student_preferences(students, schools, [student.achievement for student in students], weights)
-    generate_school_preferences(students, schools)
-
-    # Print out the preferences of the first few students and schools for inspection
-    for student in students[:5]:
-        print(f"Student {student.id} preferences: {student.preferences}")
-
-    for school in schools[:5]:
-        print(f"School {school.id} preferences: {school.preferences}")
-
-    return students, schools  # Returning the data for further use

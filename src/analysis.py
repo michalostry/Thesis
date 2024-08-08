@@ -48,6 +48,52 @@ def compute_average_rank_distance(final_matches_noisy, final_matches_true, true_
     print(f"\nFinal Average Rank Distance (Noisy - True): {average_distance:.2f}")
     return average_distance
 
+def compute_average_rank_distance(final_matches_noisy, final_matches_true, true_preferences, noisy_preferences, student_id_to_debug=None):
+    total_distance = 0
+    count = 0  # To count students with matches in both conditions
+
+    for student_id, noisy_match in final_matches_noisy.items():
+        matched_school_true = final_matches_true.get(student_id)
+
+        # Only include debug prints for the specified student
+        if student_id == student_id_to_debug:
+            print(f"Matched School (True): {matched_school_true}")
+            print(f"Matched School (Noisy): {noisy_match}")
+
+        # Only consider students matched under both conditions
+        if noisy_match is not None and matched_school_true is not None:
+            true_rank = true_preferences[student_id].index(matched_school_true) + 1 if matched_school_true in true_preferences[student_id] else None
+            noisy_rank_in_true_preferences = true_preferences[student_id].index(noisy_match) + 1 if noisy_match in true_preferences[student_id] else None
+
+            # If debugging this student, print ranks
+            if student_id == student_id_to_debug:
+                print(f"True Rank: {true_rank}")
+                print(f"Noisy Rank in True Preferences: {noisy_rank_in_true_preferences}")
+
+            # Calculate the distance (Noisy Rank in True Preferences - True Rank)
+            if true_rank is not None and noisy_rank_in_true_preferences is not None:
+                rank_distance = (noisy_rank_in_true_preferences - true_rank)
+                total_distance += rank_distance
+                count += 1
+
+                # If debugging this student, print rank distance
+                if student_id == student_id_to_debug:
+                    print(f"Rank Distance (Noisy - True): {rank_distance}")
+            elif student_id == student_id_to_debug:
+                print("Rank information missing for this student.")
+        elif student_id == student_id_to_debug:
+            print("No match for this student in one or both conditions.")
+
+    # Calculate the average distance
+    average_distance = total_distance / count if count > 0 else 0
+
+    # If debugging, print final average rank distance
+    if student_id_to_debug is not None:
+        print(f"\nFinal Average Rank Distance (Noisy - True): {average_distance}")
+
+    return average_distance
+
+
 
 
 

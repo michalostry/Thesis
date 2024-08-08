@@ -42,10 +42,24 @@ def save_to_csv(students, final_matches_true, final_matches_noisy, true_preferen
                 rank_distance = None
 
             # Print for diagnostic
-            print(f"Student {student_id}: True School = {matched_school_true}, Noisy School = {matched_school_noisy}, True Rank = {rank_true}, Noisy Rank = {rank_noisy}, Distance = {rank_distance}")
+            #print(f"Student {student_id}: True School = {matched_school_true}, Noisy School = {matched_school_noisy}, True Rank = {rank_true}, Noisy Rank = {rank_noisy}, Distance = {rank_distance}")
 
             # Write data to CSV
             writer.writerow([student_id, location_x, location_y, income, achievement, noisy_achievement,
                              matched_school_true, rank_true,
                              matched_school_noisy, rank_noisy,
                              rank_distance])
+
+    # Save school data
+    with open(os.path.join(data_folder, 'school_information.csv'), 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['School ID', 'Location X', 'Location Y', 'Quality', 'Capacity'])
+
+        for school in schools:
+            school_id = school.id
+            location_x, location_y = school.location
+            quality = school.quality
+            capacity = school.capacity
+
+            # Write school data to CSV
+            writer.writerow([school_id, location_x, location_y, quality, capacity])
