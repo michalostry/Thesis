@@ -1,23 +1,20 @@
 from collections import defaultdict
 
 def deferred_acceptance(student_preferences_dict, school_preferences_dict, schools_capacity, no_change_limit=100):
-    # Print initial preferences of students
+    # # Print initial preferences of students
     # print("\nInitial Student Preferences:")
     # for student_id, preferences in student_preferences_dict.items():
     #     print(f"Student {student_id}: {preferences}")
 
-    # Print initial preferences of schools
-    #print("\nInitial School Preferences:")
-    #for school_id, preferences in school_preferences_dict.items():
+    # #Print initial preferences of schools
+    # print("\nInitial School Preferences:")
+    # for school_id, preferences in school_preferences_dict.items():
     #    print(f"School {school_id}: {preferences}")
 
-    # # Print initial capacities of schools
+    # Print initial capacities of schools
     # print("\nInitial School Capacities:")
     # for school_id, capacity in schools_capacity.items():
-    #     print(f"School {school_id} Capacity: {capacity}")
-
-
-
+        # print(f"School {school_id} Capacity: {capacity}")
 
     unmatched_students = set(student_preferences_dict.keys())
     school_slots = {school_id: capacity for school_id, capacity in schools_capacity.items()}
@@ -34,18 +31,18 @@ def deferred_acceptance(student_preferences_dict, school_preferences_dict, schoo
         new_unmatched_students = set()
         changes = False  # Assume no changes happen until we find otherwise
 
-        #print(f"\n--- Round {round_number} ---")
-        #print("Unmatched students:", unmatched_students)
+        # print(f"\n--- Round {round_number} ---")
+        # print("Unmatched students:", unmatched_students)
 
         for student_id in unmatched_students:
             if student_preferences_dict[student_id]:  # Student still has schools to apply to
                 top_choice = student_preferences_dict[student_id].pop(0)
                 school_proposals[top_choice].append(student_id)
-                #print(f"Student {student_id} proposes to School {top_choice}")
+                # print(f"Student {student_id} proposes to School {top_choice}")
 
-        #print("\nProposals received by schools:")
+        # print("\nProposals received by schools:")
         for school_id, proposed_students in school_proposals.items():
-            #print(f"School {school_id} received proposals from students: {proposed_students}")
+            # print(f"School {school_id} received proposals from students: {proposed_students}")
             proposed_students.sort(key=lambda student_id: school_preferences_dict[school_id].index(student_id))
 
             # Combine previously accepted students and new proposals
@@ -74,19 +71,19 @@ def deferred_acceptance(student_preferences_dict, school_preferences_dict, schoo
                 matches[student_id] = None
                 new_unmatched_students.add(student_id)
 
-            # Print only newly accepted students for each school
-            #if newly_accepted_students:
-               # print(f"School {school_id} newly accepts students: {newly_accepted_students}")
-            #if newly_rejected_students:
-               # print(f"School {school_id} rejects new proposals: {newly_rejected_students}")
-            #if previously_accepted_but_rejected_students:
+            #Print only newly accepted students for each school
+            # if newly_accepted_students:
+            #    print(f"School {school_id} newly accepts students: {newly_accepted_students}")
+            # if newly_rejected_students:
+            #    print(f"School {school_id} rejects new proposals: {newly_rejected_students}")
+            # if previously_accepted_but_rejected_students:
             #    print(f"School {school_id} rejects previously accepted students: {previously_accepted_but_rejected_students}")
 
         unmatched_students = new_unmatched_students
         school_proposals.clear()
 
-        #print("\nCurrent matches set:")
-        #print(matches)
+        # print("\nCurrent matches set:")
+        # print(matches)
 
         if changes:
             no_change_rounds = 0  # Reset counter if changes occurred

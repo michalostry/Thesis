@@ -49,6 +49,7 @@ def generate_synthetic_data(num_students, num_schools, grid_size, correlation_le
 
     # Mean and standard deviation for income and achievement distributions
     income_mean = 50
+    #let's change this distribution to reflect reality more later
     achievement_mean = 50
     income_std = 10
     achievement_std = 30
@@ -82,3 +83,29 @@ def generate_synthetic_data(num_students, num_schools, grid_size, correlation_le
         school_data.append(school)
 
     return student_data, school_data
+
+def get_min_max_values(students, schools):
+    distances = []
+    qualities = []
+    incomes = [student.income for student in students]
+    aspirations = []
+
+    for student in students:
+        for school in schools:
+            distance = np.linalg.norm(student.location - school.location)
+            distances.append(distance)
+            qualities.append(school.quality)
+            aspiration = (school.quality - student.achievement) ** 2
+            aspirations.append(aspiration)
+
+    min_distance, max_distance = min(distances), max(distances)
+    min_quality, max_quality = min(qualities), max(qualities)
+    min_income, max_income = min(incomes), max(incomes)
+    min_aspiration, max_aspiration = min(aspirations), max(aspirations)
+
+    return {
+        'distance': (min_distance, max_distance),
+        'quality': (min_quality, max_quality),
+        'income': (min_income, max_income),
+        'aspiration': (min_aspiration, max_aspiration)
+    }
