@@ -1,37 +1,51 @@
+import os
 import csv
 import pandas as pd
 
-def save_to_csv(students, schools, final_matches_true, final_matches_noisy, true_preferences, noisy_preferences):
-    # Save Students data
-    with open('students.csv', 'w', newline='') as file:
+def save_to_csv(students, final_matches_true, final_matches_noisy, true_preferences, noisy_preferences, noisy_achievements, schools):
+    # Create the data directory if it doesn't exist
+    data_folder = 'data'
+    os.makedirs(data_folder, exist_ok=True)
+
+    # Save comprehensive student data
+    with open(os.path.join(data_folder, 'student_information.csv'), 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Student ID', 'Location X', 'Location Y', 'Income', 'Achievement'])
-        for student in students:
-            writer.writerow([student.id, student.location[0], student.location[1], student.income, student.achievement])
+        writer.writerow(['Student ID', 'Location X', 'Location Y', 'Income', 'Achievement', 'Noisy Achievement',
+                         'Matched School ID (True)', 'Rank in True Preferences (True)',
+                         'Matched School ID (Noisy)', 'Rank in True Preferences (Noisy)',
+                         'Rank Distance (Noisy - True)'])
 
-    # Save Schools data
-    with open('schools.csv', 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['School ID', 'Location X', 'Location Y', 'Quality', 'Capacity'])
-        for school in schools:
-            writer.writerow([school.id, school.location[0], school.location[1], school.quality, school.capacity])
+        for student, noisy_achievement in zip(students, noisy_achievements):
+            student_id = student.id
+            location_x, location_y = student.location
+            income = student.income
+            achievement = student.achievement
 
-    # Save Preferences data
-    preferences_data = []
-    for student_id, prefs in enumerate(true_preferences):
-        for rank, school_id in enumerate(prefs):
-            preferences_data.append([student_id, school_id, 'true', rank + 1])
-    for student_id, prefs in enumerate(noisy_preferences):
-        for rank, school_id in enumerate(prefs):
-            preferences_data.append([student_id, school_id, 'noisy', rank + 1])
-    preferences_df = pd.DataFrame(preferences_data, columns=['Student ID', 'School ID', 'Condition', 'Preference Rank'])
-    preferences_df.to_csv('preferences.csv', index=False)
+            # Matched school and rank in true condition
+            matched_school_true = final_matches_true.get(student_id)
+            if matched_school_true is not None:
+                rank_true = true_preferences[student_id].index(matched_school_true) + 1
+            else:
+                rank_true = None
 
-    # Save Matches data
-    matches_data = []
-    for student_id, school_id in final_matches_true.items():
-        matches_data.append([student_id, school_id, 'true'])
-    for student_id, school_id in final_matches_noisy.items():
-        matches_data.append([student_id, school_id, 'noisy'])
-    matches_df = pd.DataFrame(matches_data, columns=['Student ID', 'School ID', 'Condition'])
-    matches_df.to_csv('matches.csv', index=False)
+            # Matched school and rank in noisy condition
+            matched_school_noisy = final_matches_noisy.get(student_id)
+            if matched_school_noisy is not None:
+                rank_noisy = true_preferences[student_id].index(matched_school_noisy) + 1 if matched_school_noisy in true_preferences[student_id] else None
+            else:
+                rank_noisy = None
+
+            # Calculate rank distance
+            if rank_true is not None and rank_noisy is not None:
+                rank_distance = rank_noisy - rank_true
+            else:
+                rank_distance = None
+
+            # Print for diagnostic
+            print(f"Student {student_id}: True School = {matched_school_true}, Noisy School = {matched_school_noisy}, True Rank = {rank_true}, Noisy Rank = {rank_noisy}, Distance = {rank_distance}")
+
+            # Write data to CSV
+            writer.writerow([student_id, location_x, location_y, income, achievement, noisy_achievement,
+                             matched_school_true, rank_true,
+                             matched_school_noisy, rank_noisy,
+                             rank_distance])

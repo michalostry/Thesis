@@ -13,8 +13,8 @@ from src.analysis import compute_preference_statistics, compute_average_rank_dis
 
 if __name__ == "__main__":
     # Set parameters for the simulation
-    num_students = 900
-    num_schools = 5
+    num_students = 20
+    num_schools = 2
     grid_size = 5000
     weights = (0.2, 0.2, 0.2, 0.4)  # Weights for Distance, Quality, Income, Aspiration in student utility function
     noise_sd = 20
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     print("Synthetic data generated.")
 
     # Visualize initial student and school locations
-    visualize_initial_locations(students, schools, grid_size)
+    #visualize_initial_locations(students, schools, grid_size)
 
     print("\nGenerating preferences based on true achievements...")
     # Generate preferences based on true achievement
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     #         print(f"School {school_id}: Utility = {utility:.2f}")
 
     # Visualize the utilities
-    visualize_utilities(students[:5], schools, utilities)
+    #visualize_utilities(students[:5], schools, utilities)
 
     # Store preferences after the true condition for comparison
     true_preferences = [student.preferences[:] for student in students]
@@ -82,22 +82,22 @@ if __name__ == "__main__":
     final_matches_noisy = deferred_acceptance(student_preferences_noisy_dict, school_preferences_dict, schools_capacity)
     print("Deferred Acceptance with noisy preferences completed.")
 
-    # # Print preferences for 5 random students under both conditions
-    # print("\nComparing preferences and matches for 5 random students:")
-    # for student in np.random.choice(students, 5, replace=False):
-    #     print(f"\nStudent {student.id}:")
-    #     print(f"  Location: {student.location}")
-    #     print(f"  Income: {student.income:.2f}")
-    #     print(f"  Achievement true: {student.achievement:.2f}")
-    #     print(f"  Achievement noisy: {noisy_achievements[student.id]:.2f}")
-    #     print(f"  Preferences (True): {true_preferences[student.id]}")
-    #     print(f"  Preferences (Noisy): {noisy_preferences[student.id]}")
-    #     print(f"  Matched School (True): {final_matches_true.get(student.id)}")
-    #     print(f"  Matched School (Noisy): {final_matches_noisy.get(student.id)}")
+    # Print preferences for x random students under both conditions
+    print("\nComparing preferences and matches for x random students:")
+    for student in np.random.choice(students, 20, replace=False):
+        print(f"\nStudent {student.id}:")
+        print(f"  Location: {student.location}")
+        print(f"  Income: {student.income:.2f}")
+        print(f"  Achievement true: {student.achievement:.2f}")
+        print(f"  Achievement noisy: {noisy_achievements[student.id]:.2f}")
+        print(f"  Preferences (True): {true_preferences[student.id]}")
+        print(f"  Preferences (Noisy): {noisy_preferences[student.id]}")
+        print(f"  Matched School (True): {final_matches_true.get(student.id)}")
+        print(f"  Matched School (Noisy): {final_matches_noisy.get(student.id)}")
 
-    # # Print details and matched students for 5 random schools after each DA run
-    # print("\nDetails and matched students for 5 random schools after DA run with true achievement:")
-    # for school_id in np.random.choice(list(school_preferences_dict.keys()), 5, replace=False):
+    # # Print details and matched students for x random schools after each DA run
+    # print("\nDetails and matched students for x random schools after DA run with true achievement:")
+    # for school_id in np.random.choice(list(school_preferences_dict.keys()), 1, replace=False):
     #     matched_students_true = [student_id for student_id, matched_school_id in final_matches_true.items() if matched_school_id == school_id]
     #     print(f"\nSchool {school_id}:")
     #     school = schools[school_id]
@@ -117,13 +117,13 @@ if __name__ == "__main__":
     #     print(f"  Matched Students (Noisy): {matched_students_noisy}")
 
     # Visualize the final matches under both conditions
-    visualize_final_matches(final_matches_noisy, final_matches_true, schools)
+    #visualize_final_matches(final_matches_noisy, final_matches_true, schools)
 
     # Visualize the difference in matches between the true and noisy conditions
-    visualize_difference_in_matches(final_matches_noisy, final_matches_true)
+    #visualize_difference_in_matches(final_matches_noisy, final_matches_true)
 
     # visualize true vs noisy achievements
-    plot_noisy_vs_true_achievements(students, noisy_achievements)
+    #plot_noisy_vs_true_achievements(students, noisy_achievements)
 
     # Export the data to an Excel file
     # print("\nExporting results to Excel...")
@@ -137,7 +137,13 @@ if __name__ == "__main__":
     noisy_percentages, noisy_unmatched_percentage = compute_preference_statistics(final_matches_noisy,
                                                                                   noisy_preferences,
                                                                                   num_students)
-    average_rank_distance = compute_average_rank_distance(final_matches_noisy, true_preferences, noisy_preferences, num_students)
+
+    # In main.py, after computing the average rank distance
+    average_rank_distance = compute_average_rank_distance(final_matches_noisy,
+                                                          final_matches_true,
+                                                          true_preferences,
+                                                          noisy_preferences)
+    print(f"\nAverage rank distance between noisy and true matches: {average_rank_distance:.2f}")
 
     print("\nStatistics for True Preferences:")
     print(f"1st choice: {true_percentages[0]:.2f}%")
@@ -157,7 +163,5 @@ if __name__ == "__main__":
     print(f"Other choices: {noisy_percentages[5]:.2f}%")
     print(f"Unmatched: {noisy_unmatched_percentage:.2f}%")
 
-    print(f"\nAverage rank distance between noisy and true matches: {average_rank_distance:.2f}")
-
-# Save the generated data, matches, and preferences to CSV files
-save_to_csv(students, schools, final_matches_true, final_matches_noisy, true_preferences, noisy_preferences)
+# Now save the data
+save_to_csv(students, final_matches_true, final_matches_noisy, true_preferences, noisy_preferences, noisy_achievements, schools)
