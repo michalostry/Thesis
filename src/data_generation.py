@@ -1,4 +1,4 @@
-print_info = 0 #1 - yes, 0 - no
+print_info = 1 #1 - yes, 0 - no
 set_seed = 0 #1 - yes, 0 - no
 
 import numpy as np
@@ -116,7 +116,7 @@ def generate_synthetic_data(num_students, num_schools, grid_size, correlation_le
         location = np.random.randint(0, grid_size, 2)
         quality = np.random.normal(50, 20)
         school = School(j, location, quality)
-        school.capacity = np.random.randint(50, 360)
+        school.capacity = np.random.randint(25, 75)
         school_data.append(school)
 
     return student_data, school_data

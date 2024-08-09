@@ -1,4 +1,4 @@
-print_info = 0 #1 - yes, 0 - no
+print_info = 1 #1 - yes, 0 - no
 from collections import defaultdict
 
 def deferred_acceptance(student_preferences_dict, school_preferences_dict, schools_capacity, no_change_limit=100):

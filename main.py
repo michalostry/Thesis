@@ -16,11 +16,11 @@ from src.analysis import compute_preference_statistics, compute_average_rank_dis
 
 if __name__ == "__main__":
     # Set parameters for the simulation
-    num_iterations = 2  # Number of Monte Carlo iterations
-    num_students = 8000
-    num_schools = 50
-    grid_size = 500
-    weights = (0.3, 0.3, 0, 0.4)
+    num_iterations = 5  # Number of Monte Carlo iterations
+    num_students = 100
+    num_schools = 5
+    grid_size = 5000
+    weights = (0.4, 0.2, 0, 0.4)
     # Distance, Quality, Income, Aspiration in student utility function
     #income currently 0 because it is not implemented yet
     noise_sd = 20
