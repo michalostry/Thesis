@@ -10,6 +10,13 @@ def visualize_initial_locations(students, schools, grid_size):
                 [school.location[1] for school in schools], c='red', label='Schools', marker='x')
     plt.xlim(0, grid_size)
     plt.ylim(0, grid_size)
+
+    # Add labels (IDs) for students and schools
+    for student in students:
+        plt.annotate(student.id, (student.location[0], student.location[1]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=8, color='blue')
+    for school in schools:
+        plt.annotate(school.id, (school.location[0], school.location[1]), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=8, color='red')
+
     plt.title("Initial Student and School Locations")
     plt.legend()
     plt.show()
@@ -65,3 +72,12 @@ def visualize_difference_in_matches(final_matches_noisy, final_matches_true):
     plt.title('Comparison of Matches: True vs Noisy Achievement')
     plt.show()
 
+def visualize_utilities(students, schools, utilities):
+    plt.figure(figsize=(10, 6))
+    for student_id, student_utilities in utilities.items():
+        plt.plot(range(len(schools)), student_utilities, label=f'Student {student_id}')
+    plt.xlabel('School ID')
+    plt.ylabel('Utility')
+    plt.title('Utility Distribution Across Schools for Sample Students')
+    plt.legend()
+    plt.show()
