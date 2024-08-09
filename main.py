@@ -16,16 +16,17 @@ from src.analysis import compute_preference_statistics, compute_average_rank_dis
 
 if __name__ == "__main__":
     # Set parameters for the simulation
-    num_iterations = 5  # Number of Monte Carlo iterations
-    num_students = 3000
-    num_schools = 8
+    num_iterations = 2  # Number of Monte Carlo iterations
+    num_students = 8000
+    num_schools = 50
     grid_size = 500
     weights = (0.3, 0.3, 0, 0.4)
     # Distance, Quality, Income, Aspiration in student utility function
     #income currently 0 because it is not implemented yet
     noise_sd = 20
     debug_ids = [] #empty for no debug
-    print_info = 0 #1 - yes, 0 - no
+    print_info = 1 #1 - yes, 0 - no
+    visualize_info = 0 #1 - yes, 0 - no
 
     # Initialize list to store results of each iteration
     all_results = []
@@ -54,7 +55,7 @@ if __name__ == "__main__":
 
 
         # Visualize initial student and school locations
-        if print_info == 1: visualize_initial_locations(students, schools, grid_size)
+        if visualize_info == 1: visualize_initial_locations(students, schools, grid_size)
 
         # Calculate min and max values for normalization
         min_max_values = get_min_max_values(students, schools)
@@ -116,7 +117,7 @@ if __name__ == "__main__":
             print(f"Empty school spots: {total_capacity - num_students}")
 
         #Visualize the utilities
-        if print_info == 1:visualize_utilities(students[:5], schools, utilities)
+        if visualize_info == 1:visualize_utilities(students[:5], schools, utilities)
 
         #avg RANK CALCULATION
         for student_id, noisy_match in final_matches_noisy.items():
@@ -132,21 +133,21 @@ if __name__ == "__main__":
                 rank_distance = noisy_rank_in_true - true_rank
 
                 #Print for debugging
-                if print_info == 1:
-                    print(f"Student {student_id}: True School = {matched_school_true},"
-                          f" Noisy School = {noisy_match},"
-                          f" "f"True Rank = {true_rank},"
-                          f" Noisy Rank in True Preferences = {noisy_rank_in_true},"
-                          f" Distance = {rank_distance}")
+                # # if print_info == 1:
+                #     print(f"Student {student_id}: True School = {matched_school_true},"
+                #           f" Noisy School = {noisy_match},"
+                #           f" "f"True Rank = {true_rank},"
+                #           f" Noisy Rank in True Preferences = {noisy_rank_in_true},"
+                #           f" Distance = {rank_distance}")
 
         # Visualize the final matches under both conditions
-        if print_info == 1:visualize_final_matches(final_matches_noisy, final_matches_true, schools)
+        if visualize_info == 1:visualize_final_matches(final_matches_noisy, final_matches_true, schools)
 
         # Visualize the difference in matches between the true and noisy conditions
-        if print_info == 1:visualize_difference_in_matches(final_matches_noisy, final_matches_true)
+        if visualize_info == 1:visualize_difference_in_matches(final_matches_noisy, final_matches_true)
 
         # visualize true vs noisy achievements
-        if print_info == 1:plot_noisy_vs_true_achievements(students, noisy_achievements)
+        if visualize_info == 1:plot_noisy_vs_true_achievements(students, noisy_achievements)
 
         # Compute statistics
         true_percentages, true_unmatched_percentage = compute_preference_statistics(final_matches_true,

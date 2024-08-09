@@ -4,6 +4,7 @@ set_seed = 0 #1 - yes, 0 - no
 import numpy as np
 from scipy.stats import rankdata
 from scipy.spatial.distance import pdist, squareform
+from scipy.linalg import cholesky
 
 # Define the Student class to store attributes and preferences of each student
 class Student:
@@ -32,22 +33,55 @@ class School:
         return f"School({self.id}, Loc: {self.location}, Qual: {self.quality})"
 
 
-# Function to generate spatially correlated data
-def generate_spatially_correlated_data(locations, mean, std, correlation_length):
+# #Function to generate spatially correlated data
+# def generate_spatially_correlated_data(locations, mean, std, correlation_length):
+#     if print_info == 1: print("spatially_correlated_data")
+#     # Calculate pairwise distances between locations
+#     distances = squareform(pdist(locations))
+#
+#     # Generate a spatially correlated covariance matrix
+#     covariance_matrix = np.exp(-distances / correlation_length)
+#
+#     if print_info == 1: print("covariance matrix")
+#
+#     # Generate correlated random variables
+#     correlated_data = np.random.multivariate_normal(mean * np.ones(len(locations)),
+#                                                     std ** 2 * covariance_matrix)
+#
+#     if print_info == 1: print("correlated_data")
+#     return correlated_data
+
+def generate_spatially_correlated_data(locations, mean, std, correlation_length, epsilon=1e-6):
+    if print_info == 1:print("Step 1: Calculating pairwise distances...")
     # Calculate pairwise distances between locations
     distances = squareform(pdist(locations))
 
+    if print_info == 1:print("Step 2: Generating covariance matrix...")
     # Generate a spatially correlated covariance matrix
     covariance_matrix = np.exp(-distances / correlation_length)
 
-    # Generate correlated random variables
-    correlated_data = np.random.multivariate_normal(mean * np.ones(len(locations)),
-                                                    std ** 2 * covariance_matrix)
+    # Add a small value to the diagonal to ensure positive definiteness
+    covariance_matrix += np.eye(covariance_matrix.shape[0]) * epsilon
+
+    if print_info == 1:print("Step 3: Performing Cholesky decomposition...")
+    # Use Cholesky decomposition instead of SVD
+    L = cholesky(covariance_matrix, lower=True)
+
+    if print_info == 1:print("Step 4: Generating independent normal variables...")
+    # Generate independent standard normal variables
+    independent_normals = np.random.normal(size=len(locations))
+
+    if print_info == 1:print("Step 5: Applying Cholesky factor to generate correlated data...")
+    # Apply Cholesky factor to get correlated data
+    correlated_data = mean + std * np.dot(L, independent_normals)
+
+    if print_info == 1:print("Step 6: Correlated data generation complete.")
     return correlated_data
 
 
 # Function to generate synthetic data for a given number of students and schools
 def generate_synthetic_data(num_students, num_schools, grid_size, correlation_length=1000):
+    if print_info == 1: print("generate_synthetic_data")
     if set_seed == 1: np.random.seed(46)  # Set a random seed for reproducibility
 
     # Mean and standard deviation for income and achievement distributions
@@ -88,6 +122,7 @@ def generate_synthetic_data(num_students, num_schools, grid_size, correlation_le
     return student_data, school_data
 
 def get_min_max_values(students, schools):
+    if print_info == 1: print("get_min_max")
     distances = []
     qualities = []
     incomes = [student.income for student in students]
