@@ -47,7 +47,7 @@ def compute_average_rank_distance(final_matches_noisy, final_matches_true, true_
 
     # Calculate the average distance
     average_distance = total_distance / count if count > 0 else 0
-    print(f"\nFinal Average Rank Distance (Noisy - True): {average_distance:.2f}")
+    if print_info == 1: print(f"\nFinal Average Rank Distance (Noisy - True): {average_distance:.2f}")
     return average_distance
 
 def compute_average_rank_distance(final_matches_noisy, final_matches_true, true_preferences, noisy_preferences, debug_ids):
@@ -92,7 +92,7 @@ def compute_average_rank_distance(final_matches_noisy, final_matches_true, true_
 
     # If debugging, print final average rank distance
     if debug_ids is not None:
-        print(f"\nFinal Average Rank Distance (Noisy - True): {average_distance}")
+        if print_info == 1: print(f"\nFinal Average Rank Distance (Noisy - True): {average_distance}")
 
     return average_distance
 
