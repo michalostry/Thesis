@@ -16,17 +16,20 @@ from src.analysis import compute_preference_statistics, compute_average_rank_dis
 
 if __name__ == "__main__":
     # Set parameters for the simulation
-    num_iterations = 5  # Number of Monte Carlo iterations
+    num_iterations = 1  # Number of Monte Carlo iterations
     num_students = 100
     num_schools = 5
-    grid_size = 5000
+    grid_size = 500
     weights = (0.4, 0.2, 0, 0.4)
     # Distance, Quality, Income, Aspiration in student utility function
     #income currently 0 because it is not implemented yet
-    noise_sd = 20
+    noise_sd = 0 #0 for no noise
     debug_ids = [] #empty for no debug
-    print_info = 1 #1 - yes, 0 - no
+
+    # 1 - yes, 0 - no
+    print_info = 1
     visualize_info = 0 #1 - yes, 0 - no
+    export_individual_run_data = 1
 
     # Initialize list to store results of each iteration
     all_results = []
@@ -215,14 +218,15 @@ if __name__ == "__main__":
 
         all_results.append(iteration_results)
 
-        # #Save the data to CSV files
-        # save_to_csv(students,
-        #             final_matches_true,
-        #             final_matches_noisy,
-        #             true_preferences,
-        #             noisy_preferences,
-        #             noisy_achievements,
-        #             schools)
+        # Save the data to CSV files
+        if export_individual_run_data == 1:
+            save_to_csv(students,
+                    final_matches_true,
+                    final_matches_noisy,
+                    true_preferences,
+                    noisy_preferences,
+                    noisy_achievements,
+                    schools)
 
 # After all iterations, save or analyze the aggregated results
 import os

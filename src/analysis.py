@@ -1,4 +1,4 @@
-print_info = 1 #1 - yes, 0 - no
+print_info = 0 #1 - yes, 0 - no
 
 def compute_preference_statistics(final_matches, student_preferences, num_students):
     preference_counts = [0] * 6  # To count 1st, 2nd, 3rd, 4th, 5th, and 6th+ choices
