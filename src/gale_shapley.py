@@ -1,7 +1,7 @@
 print_info = 0 #1 - yes, 0 - no
 from collections import defaultdict
 
-def deferred_acceptance(student_preferences_dict, school_preferences_dict, schools_capacity, no_change_limit=100):
+def deferred_acceptance(student_preferences_dict, school_preferences_dict, schools_capacity, debug_ids, no_change_limit=100):
     if print_info == 1:
         # Print initial preferences of students
         print("\nInitial Student Preferences:")
@@ -18,6 +18,18 @@ def deferred_acceptance(student_preferences_dict, school_preferences_dict, schoo
         for school_id, capacity in schools_capacity.items():
             print(f"School {school_id} Capacity: {capacity}")
 
+    # for debugging
+    if debug_ids:
+        # Print initial preferences of students
+        print("\nInitial Student Preferences:")
+        for student_id, preferences in student_preferences_dict.items():
+            if student_id in debug_ids: print(f"Student {student_id}: {preferences}")
+
+        # Print initial preferences of schools
+        print("\nInitial School Preferences:")
+        for school_id, preferences in school_preferences_dict.items():
+            print(f"School {school_id}: {preferences}")
+
     unmatched_students = set(student_preferences_dict.keys())
     school_slots = {school_id: capacity for school_id, capacity in schools_capacity.items()}
     school_proposals = defaultdict(list)
@@ -33,7 +45,6 @@ def deferred_acceptance(student_preferences_dict, school_preferences_dict, schoo
         new_unmatched_students = set()
         changes = False  # Assume no changes happen until we find otherwise
 
-        print(f"\n--- Round {round_number} ---")
         if print_info == 1:
             print(f"\n--- Round {round_number} ---")
             print("Unmatched students:", unmatched_students)
@@ -43,6 +54,7 @@ def deferred_acceptance(student_preferences_dict, school_preferences_dict, schoo
                 top_choice = student_preferences_dict[student_id].pop(0)
                 school_proposals[top_choice].append(student_id)
                 if print_info == 1: print(f"Student {student_id} proposes to School {top_choice}")
+                if student_id in debug_ids: print(f"Student {student_id} proposes to School {top_choice}")
 
         if print_info == 1: print("\nProposals received by schools:")
         for school_id, proposed_students in school_proposals.items():

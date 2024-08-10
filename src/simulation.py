@@ -101,8 +101,8 @@ def generate_student_preferences(students, schools, true_or_noisy_achievements, 
 # Function to calculate the utility of a school from admitting a specific student
 def calculate_school_utility(school, student, weight_income, weight_achievement):
     # The school's utility depends on the student's income and achievement
-    income_term = weight_income * student.income  # Contribution of student's income to school's utility
-    #income_term = 0 #for now let's disable it
+    #income_term = weight_income * student.income  # Contribution of student's income to school's utility
+    income_term = 0 #for now let's disable it
     achievement_term = weight_achievement * student.achievement  # Contribution of student's achievement to utility
 
     # Total utility is the sum of these components

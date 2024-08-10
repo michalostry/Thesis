@@ -16,20 +16,23 @@ from src.analysis import compute_preference_statistics, compute_average_rank_dis
 
 if __name__ == "__main__":
     # Set parameters for the simulation
-    num_iterations = 1  # Number of Monte Carlo iterations
-    num_students = 100
-    num_schools = 5
-    grid_size = 500
-    weights = (0.4, 0.2, 0, 0.4)
+    num_iterations = 6  # Number of Monte Carlo iterations
+    num_students = 1000
+    num_schools = 20
+    grid_size = 5000
+    weights = (0.3, 0.3, 0, 0.4)
     # Distance, Quality, Income, Aspiration in student utility function
-    #income currently 0 because it is not implemented yet
-    noise_sd = 0 #0 for no noise
-    debug_ids = [] #empty for no debug
+    # income currently 0 because it is not implemented yet
+    noise_sd = 20 # 0 for no noise
+    debug_ids = []  # empty for no debug
+    school_capacity_min = 25
+    school_capacity_max = 75
+
 
     # 1 - yes, 0 - no
-    print_info = 1
-    visualize_info = 0 #1 - yes, 0 - no
-    export_individual_run_data = 1
+    print_info = 0
+    visualize_info = 0
+    export_individual_run_data = 0
 
     # Initialize list to store results of each iteration
     all_results = []
@@ -53,9 +56,8 @@ if __name__ == "__main__":
 
         if print_info == 1: print("STEP 1 >>>> Starting synthetic data generation...")
         # Generate synthetic data for students and schools
-        students, schools = generate_synthetic_data(num_students, num_schools, grid_size)
+        students, schools = generate_synthetic_data(num_students, num_schools, grid_size, school_capacity_min, school_capacity_max)
         if print_info == 1: print("Synthetic data generated.")
-
 
         # Visualize initial student and school locations
         if visualize_info == 1: visualize_initial_locations(students, schools, grid_size)
@@ -63,7 +65,7 @@ if __name__ == "__main__":
         # Calculate min and max values for normalization
         min_max_values = get_min_max_values(students, schools)
 
-        if print_info == 1:print("\nSTEP 2 >>>> Generating preferences based on true achievements...")
+        if print_info == 1: print("\nSTEP 2 >>>> Generating preferences based on true achievements...")
         # Define true achievements
         true_achievements = [student.achievement for student in students]  # Extract true achievements
         # Generate preferences based on true achievement
@@ -74,20 +76,21 @@ if __name__ == "__main__":
                                                  debug_ids,
                                                  min_max_values)
         generate_school_preferences(students, schools)
-        if print_info == 1:print("Preferences based on true achievements generated.")
+        if print_info == 1: print("Preferences based on true achievements generated.")
 
         # Store preferences after the true condition for comparison
         true_preferences = [student.preferences[:] for student in students]
 
-        if print_info == 1:print("\nSTEP 3 >>>> Running Deferred Acceptance with true preferences...")
+        if print_info == 1: print("\nSTEP 3 >>>> Running Deferred Acceptance with true preferences...")
         # Run DA with true preferences
         student_preferences_true_dict = {student.id: student.preferences for student in students}
         school_preferences_dict = {school.id: school.preferences for school in schools}
         schools_capacity = {school.id: school.capacity for school in schools}
-        final_matches_true = deferred_acceptance(student_preferences_true_dict, school_preferences_dict, schools_capacity)
-        if print_info == 1:print("Deferred Acceptance with true preferences completed.")
+        final_matches_true = deferred_acceptance(student_preferences_true_dict, school_preferences_dict,
+                                                 schools_capacity, debug_ids)
+        if print_info == 1: print("Deferred Acceptance with true preferences completed.")
 
-        if print_info == 1:print("\nSTEP 4 >>>> Introducing noise to achievements and generating preferences...")
+        if print_info == 1: print("\nSTEP 4 >>>> Introducing noise to achievements and generating preferences...")
         # Add noise to achievements
         noisy_achievements = np.random.normal([student.achievement for student in students], noise_sd)
         noisy_achievements = np.clip(noisy_achievements, 0, 100)  # Ensure values stay within 0-100
@@ -97,19 +100,19 @@ if __name__ == "__main__":
                                      weights,
                                      debug_ids,
                                      min_max_values)
-        if print_info == 1:print("Preferences based on noisy achievements generated.")
+        if print_info == 1: print("Preferences based on noisy achievements generated.")
 
         # Store preferences after the noisy condition for comparison
         noisy_preferences = [student.preferences[:] for student in students]
 
-        if print_info == 1:print("\nSTEP 5 >>>> Running Deferred Acceptance with noisy preferences...")
+        if print_info == 1: print("\nSTEP 5 >>>> Running Deferred Acceptance with noisy preferences...")
         # Run DA with noisy preferences
         student_preferences_noisy_dict = {student.id: student.preferences for student in students}
-        final_matches_noisy = deferred_acceptance(student_preferences_noisy_dict, school_preferences_dict, schools_capacity)
-        if print_info == 1:print("Deferred Acceptance with noisy preferences completed.")
+        final_matches_noisy = deferred_acceptance(student_preferences_noisy_dict, school_preferences_dict,
+                                                  schools_capacity, debug_ids)
+        if print_info == 1: print("Deferred Acceptance with noisy preferences completed.")
 
-        if print_info == 1:print("\n >>> SIMULATION COMPLETED <<<")
-
+        if print_info == 1: print("\n >>> SIMULATION COMPLETED <<<")
 
         # Calculate total capacity
         total_capacity = sum(schools_capacity.values())
@@ -119,10 +122,10 @@ if __name__ == "__main__":
             print(f"Number of Students: {num_students}")
             print(f"Empty school spots: {total_capacity - num_students}")
 
-        #Visualize the utilities
-        if visualize_info == 1:visualize_utilities(students[:5], schools, utilities)
+        # Visualize the utilities
+        if visualize_info == 1: visualize_utilities(students[:5], schools, utilities)
 
-        #avg RANK CALCULATION
+        # avg RANK CALCULATION
         for student_id, noisy_match in final_matches_noisy.items():
             matched_school_true = final_matches_true.get(student_id)
 
@@ -135,7 +138,7 @@ if __name__ == "__main__":
                 # Calculate the distance (noisy rank in true preferences - true rank)
                 rank_distance = noisy_rank_in_true - true_rank
 
-                #Print for debugging
+                # Print for debugging
                 # # if print_info == 1:
                 #     print(f"Student {student_id}: True School = {matched_school_true},"
                 #           f" Noisy School = {noisy_match},"
@@ -144,13 +147,13 @@ if __name__ == "__main__":
                 #           f" Distance = {rank_distance}")
 
         # Visualize the final matches under both conditions
-        if visualize_info == 1:visualize_final_matches(final_matches_noisy, final_matches_true, schools)
+        if visualize_info == 1: visualize_final_matches(final_matches_noisy, final_matches_true, schools)
 
         # Visualize the difference in matches between the true and noisy conditions
-        if visualize_info == 1:visualize_difference_in_matches(final_matches_noisy, final_matches_true)
+        if visualize_info == 1: visualize_difference_in_matches(final_matches_noisy, final_matches_true)
 
         # visualize true vs noisy achievements
-        if visualize_info == 1:plot_noisy_vs_true_achievements(students, noisy_achievements)
+        if visualize_info == 1: plot_noisy_vs_true_achievements(students, noisy_achievements)
 
         # Compute statistics
         true_percentages, true_unmatched_percentage = compute_preference_statistics(final_matches_true,
@@ -221,12 +224,12 @@ if __name__ == "__main__":
         # Save the data to CSV files
         if export_individual_run_data == 1:
             save_to_csv(students,
-                    final_matches_true,
-                    final_matches_noisy,
-                    true_preferences,
-                    noisy_preferences,
-                    noisy_achievements,
-                    schools)
+                        final_matches_true,
+                        final_matches_noisy,
+                        true_preferences,
+                        noisy_preferences,
+                        noisy_achievements,
+                        schools)
 
 # After all iterations, save or analyze the aggregated results
 import os
