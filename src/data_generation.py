@@ -1,6 +1,6 @@
 print_info = 0 #1 - yes, 0 - no
 print_visualizations = 0
-set_seed = 1 #1 - yes, 0 - no
+set_seed = 0 #1 - yes, 0 - no
 
 import numpy as np
 from scipy.stats import rankdata
