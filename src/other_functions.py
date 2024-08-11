@@ -2,18 +2,19 @@ import os
 import csv
 import pandas as pd
 
-def save_to_csv(students, final_matches_true, final_matches_noisy, true_preferences, noisy_preferences, noisy_achievements, schools):
+def save_to_csv(students, final_matches_true, final_matches_noisy, true_preferences, noisy_preferences, noisy_achievements, schools, iteration):
     # Create the data directory if it doesn't exist
     data_folder = 'data'
     os.makedirs(data_folder, exist_ok=True)
 
     # Save comprehensive student data
-    with open(os.path.join(data_folder, 'student_information.csv'), 'w', newline='') as file:
+    with open(os.path.join(data_folder, 'student_information.csv'), 'a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Student ID', 'Location X', 'Location Y', 'Income', 'Achievement', 'Noisy Achievement',
-                         'Matched School ID (True)', 'Rank in True Preferences (True)',
-                         'Matched School ID (Noisy)', 'Rank in True Preferences (Noisy)',
-                         'Rank Distance (Noisy - True)'])
+        if iteration == 1:  # Write header only once
+            writer.writerow(['Iteration', 'Student ID', 'Location X', 'Location Y', 'Income', 'Achievement', 'Noisy Achievement',
+                             'Matched School ID (True)', 'Rank in True Preferences (True)',
+                             'Matched School ID (Noisy)', 'Rank in True Preferences (Noisy)',
+                             'Rank Distance (Noisy - True)'])
 
         for student, noisy_achievement in zip(students, noisy_achievements):
             student_id = student.id
@@ -41,19 +42,17 @@ def save_to_csv(students, final_matches_true, final_matches_noisy, true_preferen
             else:
                 rank_distance = None
 
-            # Print for diagnostic
-            #print(f"Student {student_id}: True School = {matched_school_true}, Noisy School = {matched_school_noisy}, True Rank = {rank_true}, Noisy Rank = {rank_noisy}, Distance = {rank_distance}")
-
             # Write data to CSV
-            writer.writerow([student_id, location_x, location_y, income, achievement, noisy_achievement,
+            writer.writerow([iteration, student_id, location_x, location_y, income, achievement, noisy_achievement,
                              matched_school_true, rank_true,
                              matched_school_noisy, rank_noisy,
                              rank_distance])
 
     # Save school data
-    with open(os.path.join(data_folder, 'school_information.csv'), 'w', newline='') as file:
+    with open(os.path.join(data_folder, 'school_information.csv'), 'a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['School ID', 'Location X', 'Location Y', 'Quality', 'Capacity'])
+        if iteration == 1:  # Write header only once
+            writer.writerow(['Iteration', 'School ID', 'Location X', 'Location Y', 'Quality', 'Capacity'])
 
         for school in schools:
             school_id = school.id
@@ -62,4 +61,4 @@ def save_to_csv(students, final_matches_true, final_matches_noisy, true_preferen
             capacity = school.capacity
 
             # Write school data to CSV
-            writer.writerow([school_id, location_x, location_y, quality, capacity])
+            writer.writerow([iteration, school_id, location_x, location_y, quality, capacity])

@@ -1,6 +1,6 @@
 print_info = 0 #1 - yes, 0 - no
 print_visualizations = 0
-set_seed = 0 #1 - yes, 0 - no
+set_seed = 1 #1 - yes, 0 - no
 
 import numpy as np
 from scipy.stats import rankdata
@@ -167,26 +167,18 @@ def generate_synthetic_data(num_students, num_schools, grid_size, school_capacit
 def get_min_max_values(students, schools):
     if print_info == 1: print("get_min_max")
     distances = []
-    qualities = []
     incomes = [student.income for student in students]
-    aspirations = []
 
     for student in students:
         for school in schools:
             distance = np.linalg.norm(student.location - school.location)
             distances.append(distance)
-            qualities.append(school.quality)
-            aspiration = (school.quality - student.achievement) ** 2
-            aspirations.append(aspiration)
 
     min_distance, max_distance = min(distances), max(distances)
-    min_quality, max_quality = min(qualities), max(qualities)
     min_income, max_income = min(incomes), max(incomes)
-    min_aspiration, max_aspiration = min(aspirations), max(aspirations)
 
     return {
         'distance': (min_distance, max_distance),
-        'quality': (min_quality, max_quality),
-        'income': (min_income, max_income),
-        'aspiration': (min_aspiration, max_aspiration)
+        'income': (min_income, max_income)
     }
+

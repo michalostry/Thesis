@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.linear_model import LinearRegression
+
 
 
 def visualize_initial_locations(students, schools, grid_size):
@@ -21,19 +23,46 @@ def visualize_initial_locations(students, schools, grid_size):
     plt.legend()
     plt.show()
 
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.linear_model import LinearRegression
 
-def plot_noisy_vs_true_achievements(students, noisy_achievements):
+def plot_noisy_vs_true_achievements(students, noisy_achievements, max_income_for_visualization=125):
     true_achievements = [student.achievement for student in students]
+    incomes = np.clip([student.income for student in students], 0, max_income_for_visualization)
+    abs_diff_achievements = np.abs(np.array(true_achievements) - np.array(noisy_achievements))
 
-    plt.figure(figsize=(8, 6))
-    plt.scatter(true_achievements, noisy_achievements, c='blue', alpha=0.5)
-    plt.plot([0, 100], [0, 100], 'r--')
-    plt.xlabel("True Achievement")
-    plt.ylabel("Noisy Achievement")
-    plt.title("Noisy vs. True Achievements")
-    plt.xlim(0, 100)
-    plt.ylim(0, 100)
+    # Function to plot a correlation line
+    def plot_correlation_line(x, y, ax, max_x):
+        x = np.array(x).reshape(-1, 1)
+        y = np.array(y)
+        model = LinearRegression().fit(x, y)
+        line = model.predict(np.array([[0], [max_x]]))
+        ax.plot([0, max_x], line, 'r--', linewidth=2)
+
+    # Plot 1: True vs Noisy Achievements
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.scatter(true_achievements, noisy_achievements, c='blue', alpha=0.5)
+    plot_correlation_line(true_achievements, noisy_achievements, ax, 100)
+    ax.set_xlabel("True Achievement")
+    ax.set_ylabel("Noisy Achievement")
+    ax.set_title("Noisy vs. True Achievements")
+    ax.set_xlim(0, 100)
+    ax.set_ylim(0, 100)
     plt.show()
+
+    # Plot 2: Income vs Absolute Difference in Achievements
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.scatter(incomes, abs_diff_achievements, c='green', alpha=0.5)
+    plot_correlation_line(incomes, abs_diff_achievements, ax, max_income_for_visualization)
+    ax.set_xlabel("Income")
+    ax.set_ylabel("Absolute Difference (True - Noisy Achievement)")
+    ax.set_title("Income vs. Absolute Difference in Achievements")
+    ax.set_xlim(0, max_income_for_visualization)
+    ax.set_ylim(0, max(abs_diff_achievements))
+    plt.show()
+
+
 
 def visualize_final_matches(final_matches_noisy, final_matches_true, schools):
     school_ids = [school.id for school in schools]
