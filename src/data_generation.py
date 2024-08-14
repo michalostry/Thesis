@@ -87,20 +87,28 @@ def generate_synthetic_data(num_students, num_schools, grid_size, school_capacit
     if print_info == 1: print("generate_synthetic_data")
     if set_seed == 1: np.random.seed(46)  # Set a random seed for reproducibility
 
-    # Parameters for the lognormal distribution
-    mu = 3.9  # Mean of the log of the variable
-    sigma = 0.36  # Standard deviation of the log of the variable
+    # Given wage characteristics for log normal distribution
+    median = 39.685
+    mean = 46.013
+
+    # Calculate mu and sigma
+    mu = np.log(median)
+    sigma = np.sqrt(2 * (np.log(mean) - mu))
+
+    #calculate st.deviation
+    stdev = np.sqrt((np.exp(sigma ** 2) - 1) * np.exp(2 * mu + sigma ** 2))
+
+    # Generate lognormally distributed income data
+    # and divide by max number to normalize 0-1
+    incomes = (np.clip(np.random.lognormal(mu, sigma, num_students),0,mean+3*stdev))/(mean+3*stdev)
 
     # Generate random locations for students
     locations = np.random.randint(0, grid_size, (num_students, 2))
 
-    # Generate lognormally distributed income data
-    incomes = np.random.lognormal(mu, sigma, num_students)
-
     # Generate achievements correlated with income
     achievement_mean = 50
-    achievement_std = 30
-    correlation = 0.3  # Correlation between income and achievement
+    achievement_std = 20
+    correlation = 0.39  # Correlation between income and achievement
     raw_achievements = np.random.normal(achievement_mean + correlation * (incomes - np.mean(incomes)),
                                         achievement_std * (1 - correlation ** 2) ** 0.5)
 
@@ -156,29 +164,42 @@ def generate_synthetic_data(num_students, num_schools, grid_size, school_capacit
 
         # Visualize the distribution of incomes
         plt.figure(figsize=(10, 6))
-        plt.hist(incomes, bins=50, color='purple', edgecolor='black')
+        plt.hist(incomes, bins=100, color='purple', edgecolor='black')
         plt.title('Distribution of Student Incomes')
         plt.xlabel('Income')
         plt.ylabel('Number of Students')
         plt.show()
 
+
     return student_data, school_data
 
+
 def get_min_max_values(students, schools):
-    if print_info == 1: print("get_min_max")
-    distances = []
-    incomes = [student.income for student in students]
+    if print_info == 1:
+        print("get_min_max")
 
-    for student in students:
-        for school in schools:
-            distance = np.linalg.norm(student.location - school.location)
-            distances.append(distance)
+    # Extract locations into NumPy arrays
+    student_locations = np.array([student.location for student in students])
+    school_locations = np.array([school.location for school in schools])
 
-    min_distance, max_distance = min(distances), max(distances)
-    min_income, max_income = min(incomes), max(incomes)
+    # Calculate the distances between each student and each school
+    distances = np.linalg.norm(
+        student_locations[:, np.newaxis, :] - school_locations[np.newaxis, :, :],
+        axis=2
+    )
+
+    # Get min and max distances
+    min_distance = np.min(distances)
+    max_distance = np.max(distances)
+
+    # Get min and max incomes
+    incomes = np.array([student.income for student in students])
+    min_income = np.min(incomes)
+    max_income = np.max(incomes)
 
     return {
         'distance': (min_distance, max_distance),
         'income': (min_income, max_income)
     }
+
 

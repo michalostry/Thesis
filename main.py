@@ -94,20 +94,21 @@ if __name__ == "__main__":
                 # Visualize initial student and school locations
                 if visualize_info == 1: visualize_initial_locations(students, schools, grid_size)
 
+                if print_info == 1: print("\nSTEP 2 >>>> Generating preferences based on true achievements...")
                 # Calculate min and max values for normalization
                 min_max_values = get_min_max_values(students, schools)
-
-                if print_info == 1: print("\nSTEP 2 >>>> Generating preferences based on true achievements...")
                 # Define true achievements
                 true_achievements = [student.achievement for student in students]  # Extract true achievements
                 # Generate preferences based on true achievement
-                true_full_preferences, true_positive_preferences, utilities = generate_student_preferences(
+                true_full_preferences, true_positive_preferences, utilities, saved_noise_utility = generate_student_preferences(
                     students,
                     schools,
-                    true_achievements,  # Pass true achievements here
+                    true_achievements,
                     weights,
                     debug_ids,
-                    min_max_values
+                    min_max_values,
+                    saved_noise_utility=None,
+                    preference_type="True", # Indicate true preferences,
                 )
                 generate_school_preferences(students, schools)
                 if print_info == 1: print("Preferences based on true achievements generated.")
@@ -130,34 +131,37 @@ if __name__ == "__main__":
                 if noise_type == 'constant':
                     noisy_achievements = np.random.normal(true_achievements, noise_sd)
                 if noise_type == 'income_based_tiered_noise':
-                    # Calculate the probability of applying noise
+                    # Calculate the probability of applying large noise
                     noise_application_prob = np.clip(
-                        0.8 - income_scaling_factor * np.array([student.income for student in students]) / 100, 0.2, 0.8)
+                        0.9 - income_scaling_factor * np.array([student.income for student in students]) / 100, 0.1,
+                        0.9)
 
                     # Generate potential large and small noise
                     base_noise_large = np.random.normal(0, noise_sd, num_students)
                     base_noise_small = np.random.normal(0, 5, num_students)
 
-                    # Generate random values to decide whether to apply noise
+                    # Generate random values to decide whether to apply large noise
                     random_values = np.random.rand(num_students)
 
                     # Apply large noise where the random value is less than the noise application probability
-                    noise = np.where(random_values < noise_application_prob, base_noise_large, 0)
-
-                    # If no large noise was applied, apply small noise based on the same probability
-                    noise = np.where((noise == 0) & (random_values < noise_application_prob), base_noise_small, noise)
+                    noise = np.where(random_values < noise_application_prob, base_noise_large, base_noise_small)
 
                     # Generate noisy achievements
                     noisy_achievements = np.array(true_achievements) + noise
 
+                    # Ensure noisy achievements stay within the range 0-100
+                    noisy_achievements = np.clip(noisy_achievements, 0, 100)
+
                 noisy_achievements = np.clip(noisy_achievements, 0, 100)  # Ensure values stay within 0-100
-                noisy_full_preferences, noisy_positive_preferences, noisy_utilities = generate_student_preferences(
+                noisy_full_preferences, noisy_positive_preferences, noisy_utilities, saved_noise_utility = generate_student_preferences(
                     students,
                     schools,
                     noisy_achievements,
                     weights,
                     debug_ids,
-                    min_max_values
+                    min_max_values,
+                    saved_noise_utility,
+                    preference_type="Noisy",   # Indicate noisy preferences
                 )
                 if print_info == 1: print("Preferences based on noisy achievements generated.")
 
