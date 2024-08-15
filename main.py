@@ -44,7 +44,7 @@ if __name__ == "__main__":
         variable_iterations = config['variable_iterations']
 
         # 1 - yes, 0 - no
-        print_info = 0
+        print_info = 1
         visualize_info = 0
         export_individual_run_data = 0
 
@@ -133,9 +133,8 @@ if __name__ == "__main__":
                 if noise_type == 'income_based_tiered_noise':
                     # Calculate the probability of applying large noise
                     noise_application_prob = np.clip(
-                        0.9 - income_scaling_factor * np.array([student.income for student in students]) / 100, 0.1,
+                        0.9 - income_scaling_factor * np.array([student.income for student in students]), 0.1,
                         0.9)
-
                     # Generate potential large and small noise
                     base_noise_large = np.random.normal(0, noise_sd, num_students)
                     base_noise_small = np.random.normal(0, 5, num_students)
