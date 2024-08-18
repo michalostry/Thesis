@@ -171,10 +171,10 @@ def compute_statistics(df, df_schools):
     noisy_unmatched_percentage = 100 - df['Matched in Second Round'].mean() * 100
 
     # Debugging print statements to verify statistics
-    print("True Percentages:", true_percentages)
-    print("Noisy Percentages:", noisy_percentages)
-    print("True Unmatched Percentage:", true_unmatched_percentage)
-    print("Noisy Unmatched Percentage:", noisy_unmatched_percentage)
+    # print("True Percentages:", true_percentages)
+    # print("Noisy Percentages:", noisy_percentages)
+    # print("True Unmatched Percentage:", true_unmatched_percentage)
+    # print("Noisy Unmatched Percentage:", noisy_unmatched_percentage)
 
     # Consolidate Results
     single_iteration_results = pd.DataFrame({

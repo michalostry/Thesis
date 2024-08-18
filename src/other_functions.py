@@ -2,6 +2,7 @@ import os
 import csv
 import pandas as pd
 from datetime import datetime
+import numpy as np
 
 
 def save_to_csv(students,
@@ -14,8 +15,8 @@ def save_to_csv(students,
                 schools,
                 config_name,
                 iteration_name,
-                save_as_csv=True,  # Option to save as CSV or not
-                save_mode='append',  # Options: 'append', 'new_each_run', 'new_on_first_iteration'
+                save_as_csv,  # Option to save as CSV or not
+                save_mode,  # Options: 'append', 'new_each_run', 'new_on_first_iteration'
                 current_iteration=1):  # Track the current iteration for conditional saving
 
     # Create an empty list to store each student's data
@@ -62,7 +63,7 @@ def save_to_csv(students,
 
         # Calculate relative utility difference
         if utility_true is not None and utility_true != 0 and utility_distance is not None:
-            relative_utility_difference = utility_distance / abs(utility_true)
+            relative_utility_difference = np.clip(utility_distance / abs(utility_true),-10,10)
         else:
             relative_utility_difference = None
 
@@ -97,8 +98,6 @@ def save_to_csv(students,
     # Convert the list of dictionaries into a DataFrame
     df = pd.DataFrame(data_rows)
 
-    print(df.head())
-
     # Now save school data as well
     school_data_rows = []
     for school in schools:
@@ -121,25 +120,32 @@ def save_to_csv(students,
     # Convert the list of dictionaries into a DataFrame
     df_schools = pd.DataFrame(school_data_rows)
 
-    # Handle file saving based on the save_mode and iteration
+    # Ensure that data directory exists
+    data_directory = 'data/student_data'
+    if not os.path.exists(data_directory):
+        os.makedirs(data_directory)
+
     if save_as_csv:
         # Generate file names based on the mode
         if save_mode == 'new_each_run':
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            student_file_path = os.path.join('data', f'student_information_{config_name}_{timestamp}.csv')
-            school_file_path = os.path.join('data', f'school_information_{config_name}_{timestamp}.csv')
+            student_file_path = os.path.join(data_directory, f'student_information_{config_name}_{timestamp}.csv')
+            school_file_path = os.path.join(data_directory, f'school_information_{config_name}_{timestamp}.csv')
         elif save_mode == 'new_on_first_iteration' and current_iteration == 1:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            student_file_path = os.path.join('data', f'student_information_{config_name}_{timestamp}.csv')
-            school_file_path = os.path.join('data', f'school_information_{config_name}_{timestamp}.csv')
-        else:  # Default to appending
-            student_file_path = os.path.join('data', 'student_information.csv')
-            school_file_path = os.path.join('data', 'school_information.csv')
+            student_file_path = os.path.join(data_directory, f'student_information_{config_name}_{timestamp}.csv')
+            school_file_path = os.path.join(data_directory, f'school_information_{config_name}_{timestamp}.csv')
+        elif save_mode == 'append':  # Default to appending
+            student_file_path = os.path.join(data_directory, 'student_information.csv')
+            school_file_path = os.path.join(data_directory, 'school_information.csv')
+        else:
+            raise ValueError("Invalid save_mode provided.")
 
         # Save the DataFrame to CSV (Students)
         df.to_csv(student_file_path, index=False, mode='a', header=not os.path.isfile(student_file_path))
 
-        # Convert the school data into a DataFrame and save it (Schools)
+        # Save the DataFrame to CSV (Schools)
         df_schools.to_csv(school_file_path, index=False, mode='a', header=not os.path.isfile(school_file_path))
 
     return df, df_schools  # Return the DataFrames for further manipulation if needed
+

@@ -48,8 +48,8 @@ if __name__ == "__main__":
         print_info = 0
         visualize_info = 0
         export_individual_run_data = 1
-        save_as_csv = True,  # Enable saving as CSV
-        save_mode = 'append',  # Options: 'append', 'new_each_run', 'new_on_first_iteration'
+        save_as_csv = True  # Enable saving as CSV True or False
+        save_mode = 'append'  # Options: 'append', 'new_each_run', 'new_on_first_iteration'
 
         save_single_iteration_results = True
 
@@ -199,27 +199,6 @@ if __name__ == "__main__":
                 # Visualize the utilities
                 if visualize_info == 1: visualize_utilities(students[:5], schools, utilities)
 
-                # avg RANK CALCULATION
-                for student_id, noisy_match in final_matches_noisy.items():
-                    matched_school_true = final_matches_true.get(student_id)
-
-                    if noisy_match is not None and matched_school_true is not None:
-                        # Calculate rank in the true preferences for the matched school in true preferences
-                        true_rank = true_preferences[student_id].index(matched_school_true) + 1
-                        # Calculate the rank in the true preferences for the school matched in noisy conditions
-                        noisy_rank_in_true = true_preferences[student_id].index(noisy_match) + 1
-
-                        # Calculate the distance (noisy rank in true preferences - true rank)
-                        rank_distance = noisy_rank_in_true - true_rank
-
-                        # Print for debugging
-                        # # if print_info == 1:
-                        #     print(f"Student {student_id}: True School = {matched_school_true},"
-                        #           f" Noisy School = {noisy_match},"
-                        #           f" "f"True Rank = {true_rank},"
-                        #           f" Noisy Rank in True Preferences = {noisy_rank_in_true},"
-                        #           f" Distance = {rank_distance}")
-
                 # Visualize the final matches under both conditions
                 if visualize_info == 1: visualize_final_matches(final_matches_noisy, final_matches_true, schools)
 
@@ -229,50 +208,6 @@ if __name__ == "__main__":
                 # visualize true vs noisy achievements
                 if visualize_info == 1: plot_noisy_vs_true_achievements(students, noisy_achievements)
 
-                # Compute statistics
-                true_percentages, true_unmatched_percentage = compute_preference_statistics(final_matches_true,
-                                                                                            true_preferences,
-                                                                                            num_students)
-                noisy_percentages, noisy_unmatched_percentage = compute_preference_statistics(final_matches_noisy,
-                                                                                              noisy_preferences,
-                                                                                              num_students)
-
-                average_rank_distance = compute_average_rank_distance(final_matches_noisy,
-                                                                      final_matches_true,
-                                                                      true_preferences,
-                                                                      noisy_preferences,
-                                                                      debug_ids)
-
-                if print_info == 1:
-                    print("\nStatistics for True Preferences:")
-                    print(f"1st choice: {true_percentages[0]:.2f}%")
-                    print(f"2nd choice: {true_percentages[1]:.2f}%")
-                    print(f"3rd choice: {true_percentages[2]:.2f}%")
-                    print(f"4th choice: {true_percentages[3]:.2f}%")
-                    print(f"5th choice: {true_percentages[4]:.2f}%")
-                    print(f"Other choices: {true_percentages[5]:.2f}%")
-                    print(f"Unmatched: {true_unmatched_percentage:.2f}%")
-
-                    print("\nStatistics for Noisy Preferences:")
-                    print(f"1st choice: {noisy_percentages[0]:.2f}%")
-                    print(f"2nd choice: {noisy_percentages[1]:.2f}%")
-                    print(f"3rd choice: {noisy_percentages[2]:.2f}%")
-                    print(f"4th choice: {noisy_percentages[3]:.2f}%")
-                    print(f"5th choice: {noisy_percentages[4]:.2f}%")
-                    print(f"Other choices: {noisy_percentages[5]:.2f}%")
-                    print(f"Unmatched: {noisy_unmatched_percentage:.2f}%")
-
-                    print(f"\nAverage rank distance between noisy and true matches: {average_rank_distance:.4f}")
-
-                # Efficiently calculate the number of same and different matches
-                same_match_count = sum(
-                    final_matches_noisy[student_id] == final_matches_true[student_id] for student_id in
-                    final_matches_noisy)
-                different_match_count = len(final_matches_noisy) - same_match_count
-
-                # Calculate the percentage of unchanged matches
-                percentage_unchanged_matches = (same_match_count / num_students) * 100
-
                 # Store results for this iteration, including the percentage of unchanged matches
                 iteration_results = {
                     'iteration': iteration + 1,
@@ -280,22 +215,6 @@ if __name__ == "__main__":
                     'num_students': num_students,
                     'num_schools': num_schools,
                     'total_capacity': total_capacity,
-                    'average_rank_distance': average_rank_distance,
-                    'true_1st_choice': true_percentages[0],
-                    'true_2nd_choice': true_percentages[1],
-                    'true_3rd_choice': true_percentages[2],
-                    'true_4th_choice': true_percentages[3],
-                    'true_5th_choice': true_percentages[4],
-                    'true_other_choices': true_percentages[5],
-                    'true_unmatched': true_unmatched_percentage,
-                    'noisy_1st_choice': noisy_percentages[0],
-                    'noisy_2nd_choice': noisy_percentages[1],
-                    'noisy_3rd_choice': noisy_percentages[2],
-                    'noisy_4th_choice': noisy_percentages[3],
-                    'noisy_5th_choice': noisy_percentages[4],
-                    'noisy_other_choices': noisy_percentages[5],
-                    'noisy_unmatched': noisy_unmatched_percentage,
-                    'percentage_unchanged_matches': percentage_unchanged_matches,
                     'weights_distance': weights[0],
                     'weights_quality': weights[1],
                     'weights_income': weights[2],
@@ -307,6 +226,7 @@ if __name__ == "__main__":
                 each_config_variable_iteration_results.append(iteration_results)
 
                 iteration_name = f"iteration_{iteration + 1}"
+
                 # Save the data to CSV files
                 if export_individual_run_data == 1:
                     df, df_schools = save_to_csv(students,
@@ -353,35 +273,21 @@ if __name__ == "__main__":
             MC_RESULTS.to_csv(MC_RESULTS_file_path, index=False, mode='a',
                                  header=not os.path.isfile(MC_RESULTS_file_path))
 
-            # Store results for this configuration
-            each_config_results.append(MC_RESULTS)
-            all_config_results.append(each_config_results)
+            # After all iterations are complete, calculate the average of 'average_rank_distance' from accumulated_iteration_results
+            average_rank_distance_all_runs = accumulated_iteration_results['average_rank_distance'].mean()
 
-            # Specify the path to the data folder
-            data_folder = "data"
-            os.makedirs(data_folder, exist_ok=True)  # Ensure the data folder exists
-
-            # Create the full path for the CSV file
-            csv_file_path = os.path.join(data_folder, "monte_carlo_results.csv")
-
-            # Convert results to a DataFrame
-            results_df = pd.DataFrame(each_config_variable_iteration_results)
-            # Add a column for the configuration name to the DataFrame
-            results_df['config_name'] = config_name
-
-            # Save the DataFrame to a CSV file in the data folder, appending to it
-            if os.path.exists(csv_file_path):
-                results_df.to_csv(csv_file_path, mode='a', header=False, index=False)
-            else:
-                results_df.to_csv(csv_file_path, index=False)
-
-            # After all iterations, calculate the average of average_rank_distance
-            average_rank_distance_all_runs = np.mean(results_df['average_rank_distance'])
-
+            # Print summary statistics
             print(
                 f"\nMonte Carlo simulation completed with {num_iterations} iterations for configuration {config_name_base}.")
             print(f"Average rank distance across all runs: {average_rank_distance_all_runs:.4f}")
-            print(f"Results saved to '{csv_file_path}'.")
+
+            # Optionally, you can print more statistics if desired
+            average_unchanged_matches_all_runs = accumulated_iteration_results['percentage_unchanged_matches'].mean()
+            print(f"Average percentage of unchanged matches across all runs: {average_unchanged_matches_all_runs:.2f}%")
+
+            # Assuming the file path where the final results are saved is 'MC_RESULTS_file_path'
+            print(f"Results saved to '{MC_RESULTS_file_path}'.")
+            print("_____")
 
             each_config_results.append(each_config_variable_iteration_results)
         all_config_results.append(each_config_results)
