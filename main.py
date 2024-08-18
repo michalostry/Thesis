@@ -2,7 +2,7 @@ import numpy as np
 import os
 import pandas as pd
 import random
-from src.other_functions import save_to_csv
+from src.other_functions import (save_to_csv)
 from src.simulation import (generate_student_preferences,
                             generate_school_preferences,
                             calculate_student_utility)
@@ -14,7 +14,8 @@ from src.visualizations import (visualize_initial_locations,
                                 visualize_difference_in_matches,
                                 visualize_utilities)
 from src.gale_shapley import deferred_acceptance
-from src.analysis import compute_preference_statistics, compute_average_rank_distance
+from src.analysis import (compute_preference_statistics, compute_average_rank_distance,
+                          compute_statistics, aggregate_simulation_results)
 from configuration import configurations
 
 if __name__ == "__main__":
@@ -44,9 +45,16 @@ if __name__ == "__main__":
         variable_iterations = config['variable_iterations']
 
         # 1 - yes, 0 - no
-        print_info = 1
+        print_info = 0
         visualize_info = 0
-        export_individual_run_data = 0
+        export_individual_run_data = 1
+        save_as_csv = True,  # Enable saving as CSV
+        save_mode = 'append',  # Options: 'append', 'new_each_run', 'new_on_first_iteration'
+
+        save_single_iteration_results = True
+
+        # Initialize a DataFrame to accumulate results for this configuration
+        accumulated_iteration_results = pd.DataFrame()
 
         for i in range(max(variable_iterations, 1)):  # Ensure at least one iteration
             each_config_variable_iteration_results = []
@@ -88,7 +96,8 @@ if __name__ == "__main__":
 
                 if print_info == 1: print("STEP 1 >>>> Starting synthetic data generation...")
                 # Generate synthetic data for students and schools
-                students, schools = generate_synthetic_data(num_students, num_schools, grid_size, school_capacity_min, school_capacity_max)
+                students, schools = generate_synthetic_data(num_students, num_schools, grid_size, school_capacity_min,
+                                                            school_capacity_max)
                 if print_info == 1: print("Synthetic data generated.")
 
                 # Visualize initial student and school locations
@@ -108,7 +117,7 @@ if __name__ == "__main__":
                     debug_ids,
                     min_max_values,
                     saved_noise_utility=None,
-                    preference_type="True", # Indicate true preferences,
+                    preference_type="True",  # Indicate true preferences,
                 )
                 generate_school_preferences(students, schools)
                 if print_info == 1: print("Preferences based on true achievements generated.")
@@ -118,14 +127,16 @@ if __name__ == "__main__":
 
                 if print_info == 1: print("\nSTEP 3 >>>> Running Deferred Acceptance with true preferences...")
                 # Run DA with positive utility preferences
-                student_preferences_true_dict = {student.id: true_positive_preferences[student.id] for student in students}
+                student_preferences_true_dict = {student.id: true_positive_preferences[student.id] for student in
+                                                 students}
                 school_preferences_dict = {school.id: school.preferences for school in schools}
                 schools_capacity = {school.id: school.capacity for school in schools}
                 final_matches_true = deferred_acceptance(student_preferences_true_dict, school_preferences_dict,
                                                          schools_capacity, debug_ids)
                 if print_info == 1: print("Deferred Acceptance with true preferences completed.")
 
-                if print_info == 1: print("\nSTEP 4 >>>> Introducing noise to achievements and generating preferences...")
+                if print_info == 1: print(
+                    "\nSTEP 4 >>>> Introducing noise to achievements and generating preferences...")
                 # Add noise to achievements
                 # Introduce noise to achievements based on noise_type
                 if noise_type == 'constant':
@@ -160,7 +171,7 @@ if __name__ == "__main__":
                     debug_ids,
                     min_max_values,
                     saved_noise_utility,
-                    preference_type="Noisy",   # Indicate noisy preferences
+                    preference_type="Noisy",  # Indicate noisy preferences
                 )
                 if print_info == 1: print("Preferences based on noisy achievements generated.")
 
@@ -169,7 +180,8 @@ if __name__ == "__main__":
 
                 if print_info == 1: print("\nSTEP 5 >>>> Running Deferred Acceptance with noisy preferences...")
                 # Run DA with positive utility preferences for noisy achievements
-                student_preferences_noisy_dict = {student.id: noisy_positive_preferences[student.id] for student in students}
+                student_preferences_noisy_dict = {student.id: noisy_positive_preferences[student.id] for student in
+                                                  students}
                 final_matches_noisy = deferred_acceptance(student_preferences_noisy_dict, school_preferences_dict,
                                                           schools_capacity, debug_ids)
                 if print_info == 1: print("Deferred Acceptance with noisy preferences completed.")
@@ -254,7 +266,8 @@ if __name__ == "__main__":
 
                 # Efficiently calculate the number of same and different matches
                 same_match_count = sum(
-                    final_matches_noisy[student_id] == final_matches_true[student_id] for student_id in final_matches_noisy)
+                    final_matches_noisy[student_id] == final_matches_true[student_id] for student_id in
+                    final_matches_noisy)
                 different_match_count = len(final_matches_noisy) - same_match_count
 
                 # Calculate the percentage of unchanged matches
@@ -263,7 +276,7 @@ if __name__ == "__main__":
                 # Store results for this iteration, including the percentage of unchanged matches
                 iteration_results = {
                     'iteration': iteration + 1,
-                    'config_name':config_name,
+                    'config_name': config_name,
                     'num_students': num_students,
                     'num_schools': num_schools,
                     'total_capacity': total_capacity,
@@ -288,7 +301,7 @@ if __name__ == "__main__":
                     'weights_income': weights[2],
                     'weights_aspiration': weights[3],
                     'noise_standard_deviation': noise_sd,
-                    'grid_size': grid_size
+                    'grid_size': grid_size,
                 }
 
                 each_config_variable_iteration_results.append(iteration_results)
@@ -296,15 +309,53 @@ if __name__ == "__main__":
                 iteration_name = f"iteration_{iteration + 1}"
                 # Save the data to CSV files
                 if export_individual_run_data == 1:
-                    save_to_csv(students,
-                                final_matches_true,
-                                final_matches_noisy,
-                                true_preferences,
-                                noisy_preferences,
-                                noisy_achievements,
-                                schools,
-                                config_name,
-                                iteration_name)
+                    df, df_schools = save_to_csv(students,
+                                                 final_matches_true,
+                                                 final_matches_noisy,
+                                                 true_preferences,
+                                                 noisy_preferences,
+                                                 noisy_achievements,
+                                                 utilities,
+                                                 schools,
+                                                 config_name,
+                                                 iteration_name,
+                                                 save_as_csv,
+                                                 save_mode,
+                                                 # Options: 'append', 'new_each_run', 'new_on_first_iteration'
+                                                 current_iteration=iteration + 1)  # Track the current iteration
+
+                # COMPUTING and saving STATISTICS FOR EACH ITERATION
+                single_iteration_results = compute_statistics(df, df_schools)
+
+                # Append current iteration results to the accumulated DataFrame
+                accumulated_iteration_results = pd.concat([accumulated_iteration_results, single_iteration_results],
+                                                          ignore_index=True)
+
+                # Consolidate additional columns into a new DataFrame
+                additional_columns = pd.DataFrame({
+                    'Iteration Number': [iteration + 1],
+                    'Config Name': [config_name],
+                    'Iteration Name': [iteration_name]
+                })
+                # Concatenate these additional columns to the single_iteration_results DataFrame
+                single_iteration_results = pd.concat([additional_columns, single_iteration_results], axis=1)
+
+                single_results_file_path = os.path.join('data', 'single_iteration_results.csv')
+                if save_single_iteration_results:
+                    single_iteration_results.to_csv(single_results_file_path, index=False, mode='a',
+                                                    header=not os.path.isfile(single_results_file_path))
+
+            # After all iterations are complete, aggregate the results
+            MC_RESULTS = aggregate_simulation_results([accumulated_iteration_results], config)
+
+            # Save the final summary to a CSV file
+            MC_RESULTS_file_path = os.path.join('data', 'MC_RESULTS.csv')
+            MC_RESULTS.to_csv(MC_RESULTS_file_path, index=False, mode='a',
+                                 header=not os.path.isfile(MC_RESULTS_file_path))
+
+            # Store results for this configuration
+            each_config_results.append(MC_RESULTS)
+            all_config_results.append(each_config_results)
 
             # Specify the path to the data folder
             data_folder = "data"
@@ -327,9 +378,12 @@ if __name__ == "__main__":
             # After all iterations, calculate the average of average_rank_distance
             average_rank_distance_all_runs = np.mean(results_df['average_rank_distance'])
 
-            print(f"\nMonte Carlo simulation completed with {num_iterations} iterations for configuration {config_name_base}.")
+            print(
+                f"\nMonte Carlo simulation completed with {num_iterations} iterations for configuration {config_name_base}.")
             print(f"Average rank distance across all runs: {average_rank_distance_all_runs:.4f}")
             print(f"Results saved to '{csv_file_path}'.")
 
             each_config_results.append(each_config_variable_iteration_results)
         all_config_results.append(each_config_results)
+
+print("Monte Carlo simulation completed and results have been aggregated and saved.")

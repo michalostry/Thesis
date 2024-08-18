@@ -33,7 +33,7 @@ def calculate_student_utility(students, schools, true_or_noisy_achievements, wei
 
     # Calculate individual aspiration range for each student
     aspiration_diffs = (school_qualities[np.newaxis, :] - np.array(true_or_noisy_achievements)[:, np.newaxis]) ** 2
-    # max_aspiration_diff = np.max(aspiration_diffs)
+    max_aspiration_diff = np.max(aspiration_diffs)
     # scaled_aspirations = aspiration_diffs / (max_aspiration_diff + 1e-6)
 
     # old approach to min max normalization
@@ -54,11 +54,9 @@ def calculate_student_utility(students, schools, true_or_noisy_achievements, wei
     # Calculate utility for each student-school pair
     utilities = (
             attending_utility + weight_quality * (school_qualities / 100)
-            # now muted - old approach
-            # - weight_distance * normalized_distances
             - weight_distance * scaled_distances
             + weight_income_aspiration * student_incomes[:, np.newaxis] * (school_qualities / 100)
-            - weight_aspiration * normalized_aspirations
+            - weight_aspiration * scaled_aspirations
             + noise_utility
     )
 
@@ -77,7 +75,7 @@ def calculate_student_utility(students, schools, true_or_noisy_achievements, wei
                     print(
                         f"    Income Aspiration Component: {weight_income_aspiration * student_incomes[i] * (school_qualities[j] / 100):.3f} = {weight_income_aspiration:.1f} * scaled_incomes {student_incomes[i]:.3f} * School qualities: {school_qualities[j]:.1f} / 100")
                     print(
-                        f"    Aspiration Component: {-weight_aspiration * normalized_aspirations[i, j]:.3f} = {weight_aspiration:.1f} * scaled aspiration {normalized_aspirations[i, j]:.1f}"),
+                        f"    Aspiration Component: {-weight_aspiration * scaled_aspirations[i, j]:.3f} = {weight_aspiration:.1f} * scaled aspiration {scaled_aspirations[i, j]:.3f}"),
                     print(f"    Noise Added: {noise_utility[i, j]:.3f}")
                     print(f"    Total Utility: {utilities[i, j]:.3f}")
 

@@ -1,6 +1,6 @@
 print_info = 0 #1 - yes, 0 - no
 print_visualizations = 0
-set_seed = 0 #1 - yes, 0 - no
+set_seed = 1 #1 - yes, 0 - no
 
 import numpy as np
 from scipy.stats import rankdata
@@ -206,12 +206,12 @@ def generate_synthetic_data(num_students, num_schools, grid_size, school_capacit
         school_data.append(school)
 
     if print_visualizations == 1:
-        # # Visualize the distribution of school qualities
-        # plt.hist(school_qualities, bins=20, color='blue', edgecolor='black')
-        # plt.title('Distribution of School Quality')
-        # plt.xlabel('School Quality')
-        # plt.ylabel('Number of Schools')
-        # plt.show()
+        # Visualize the distribution of school qualities
+        plt.hist(school_qualities, bins=20, color='blue', edgecolor='black')
+        plt.title('Distribution of School Quality')
+        plt.xlabel('School Quality')
+        plt.ylabel('Number of Schools')
+        plt.show()
 
         # # Visualize the initial locations of students with color-coding by income levels
         # plt.figure(figsize=(10, 10))

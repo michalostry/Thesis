@@ -1,6 +1,8 @@
 import os
 import csv
 import pandas as pd
+from datetime import datetime
+
 
 def save_to_csv(students,
                 final_matches_true,
@@ -8,75 +10,136 @@ def save_to_csv(students,
                 true_preferences,
                 noisy_preferences,
                 noisy_achievements,
+                utilities_true,
                 schools,
                 config_name,
-                iteration_name):
-    # Create the data directory if it doesn't exist
-    data_folder = 'data'
-    os.makedirs(data_folder, exist_ok=True)
+                iteration_name,
+                save_as_csv=True,  # Option to save as CSV or not
+                save_mode='append',  # Options: 'append', 'new_each_run', 'new_on_first_iteration'
+                current_iteration=1):  # Track the current iteration for conditional saving
 
-    # File paths
-    student_file_path = os.path.join(data_folder, 'student_information.csv')
-    school_file_path = os.path.join(data_folder, 'school_information.csv')
+    # Create an empty list to store each student's data
+    data_rows = []
 
-    # Save comprehensive student data
-    file_exists = os.path.isfile(student_file_path)
-    with open(student_file_path, 'a', newline='') as file:
-        writer = csv.writer(file)
-        if not file_exists:  # Write header only if file does not exist
-            writer.writerow(
-                ['Config Name', 'Iteration', 'Student ID', 'Location X', 'Location Y', 'Income', 'Achievement',
-                 'Noisy Achievement',
-                 'Matched School ID (True)', 'Rank in True Preferences (True)',
-                 'Matched School ID (Noisy)', 'Rank in True Preferences (Noisy)',
-                 'Rank Distance (Noisy - True)'])
+    for student, noisy_achievement in zip(students, noisy_achievements):
+        student_id = student.id
+        location_x, location_y = student.location
+        income = student.income
+        achievement = student.achievement
 
-        for student, noisy_achievement in zip(students, noisy_achievements):
-            student_id = student.id
-            location_x, location_y = student.location
-            income = student.income
-            achievement = student.achievement
+        # Matched school and rank in true condition
+        matched_school_true = final_matches_true.get(student_id)
+        if matched_school_true is not None:
+            rank_true = true_preferences[student_id].index(matched_school_true) + 1
+            utility_true = utilities_true[student_id][matched_school_true]
+        else:
+            rank_true = None
+            utility_true = None
 
-            # Matched school and rank in true condition
-            matched_school_true = final_matches_true.get(student_id)
-            if matched_school_true is not None:
-                rank_true = true_preferences[student_id].index(matched_school_true) + 1
-            else:
-                rank_true = None
+        # Matched school and rank in noisy condition
+        matched_school_noisy = final_matches_noisy.get(student_id)
+        if matched_school_noisy is not None:
+            rank_noisy = true_preferences[student_id].index(matched_school_noisy) + 1 if matched_school_noisy in \
+                                                                                         true_preferences[
+                                                                                             student_id] else None
+            utility_noisy_under_true = utilities_true[student_id][
+                matched_school_noisy] if rank_noisy is not None else None
+        else:
+            rank_noisy = None
+            utility_noisy_under_true = None
 
-            # Matched school and rank in noisy condition
-            matched_school_noisy = final_matches_noisy.get(student_id)
-            if matched_school_noisy is not None:
-                rank_noisy = true_preferences[student_id].index(matched_school_noisy) + 1 if matched_school_noisy in true_preferences[student_id] else None
-            else:
-                rank_noisy = None
+        # Calculate rank distance
+        if rank_true is not None and rank_noisy is not None:
+            rank_distance = rank_noisy - rank_true
+        else:
+            rank_distance = None
 
-            # Calculate rank distance
-            if rank_true is not None and rank_noisy is not None:
-                rank_distance = rank_noisy - rank_true
-            else:
-                rank_distance = None
+        # Calculate utility distance
+        if utility_true is not None and utility_noisy_under_true is not None:
+            utility_distance = utility_true - utility_noisy_under_true
+        else:
+            utility_distance = None
 
-            # Write data to CSV
-            writer.writerow([config_name, iteration_name, student_id, location_x, location_y, income, achievement,
-                             noisy_achievement,
-                             matched_school_true, rank_true,
-                             matched_school_noisy, rank_noisy,
-                             rank_distance])
+        # Calculate relative utility difference
+        if utility_true is not None and utility_true != 0 and utility_distance is not None:
+            relative_utility_difference = utility_distance / abs(utility_true)
+        else:
+            relative_utility_difference = None
 
-    # Save school data
-    file_exists = os.path.isfile(school_file_path)
-    with open(school_file_path, 'a', newline='') as file:
-        writer = csv.writer(file)
-        if not file_exists:  # Write header only if file does not exist
-            writer.writerow(
-                ['Config Name', 'Iteration', 'School ID', 'Location X', 'Location Y', 'Quality', 'Capacity'])
+        # Calculate relative rank difference (ordinal measure)
+        if rank_true is not None and rank_noisy is not None and rank_true != 0:
+            relative_rank_difference = (rank_distance / rank_true)
+        else:
+            relative_rank_difference = None
 
-        for school in schools:
-            school_id = school.id
-            location_x, location_y = school.location
-            quality = school.quality
-            capacity = school.capacity
+        # Append the data for this student to the list as a dictionary
+        data_rows.append({
+            'Config Name': config_name,
+            'Iteration': iteration_name,
+            'Student ID': student_id,
+            'Location X': location_x,
+            'Location Y': location_y,
+            'Income': income,
+            'Achievement': achievement,
+            'Noisy Achievement': noisy_achievement,
+            'Matched School ID (True)': matched_school_true,
+            'Rank in True Preferences (True)': rank_true,
+            'Utility of Matched School (True)': utility_true,
+            'Utility of Matched School under Noisy (True)': utility_noisy_under_true,
+            'Utility Distance': utility_distance,
+            'Relative Utility Difference': relative_utility_difference,
+            'Matched School ID (Noisy)': matched_school_noisy,
+            'Rank in True Preferences (Noisy)': rank_noisy,
+            'Rank Distance (Noisy - True)': rank_distance,
+            'Relative Rank Difference': relative_rank_difference
+        })
 
-            # Write school data to CSV
-            writer.writerow([config_name, iteration_name, school_id, location_x, location_y, quality, capacity])
+    # Convert the list of dictionaries into a DataFrame
+    df = pd.DataFrame(data_rows)
+
+    print(df.head())
+
+    # Now save school data as well
+    school_data_rows = []
+    for school in schools:
+        school_id = school.id
+        location_x, location_y = school.location
+        quality = school.quality
+        capacity = school.capacity
+
+        # Append the data for this school to the list as a dictionary
+        school_data_rows.append({
+            'Config Name': config_name,
+            'Iteration': iteration_name,
+            'School ID': school_id,
+            'Location X': location_x,
+            'Location Y': location_y,
+            'Quality': quality,
+            'Capacity': capacity
+        })
+
+    # Convert the list of dictionaries into a DataFrame
+    df_schools = pd.DataFrame(school_data_rows)
+
+    # Handle file saving based on the save_mode and iteration
+    if save_as_csv:
+        # Generate file names based on the mode
+        if save_mode == 'new_each_run':
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            student_file_path = os.path.join('data', f'student_information_{config_name}_{timestamp}.csv')
+            school_file_path = os.path.join('data', f'school_information_{config_name}_{timestamp}.csv')
+        elif save_mode == 'new_on_first_iteration' and current_iteration == 1:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            student_file_path = os.path.join('data', f'student_information_{config_name}_{timestamp}.csv')
+            school_file_path = os.path.join('data', f'school_information_{config_name}_{timestamp}.csv')
+        else:  # Default to appending
+            student_file_path = os.path.join('data', 'student_information.csv')
+            school_file_path = os.path.join('data', 'school_information.csv')
+
+        # Save the DataFrame to CSV (Students)
+        df.to_csv(student_file_path, index=False, mode='a', header=not os.path.isfile(student_file_path))
+
+        # Convert the school data into a DataFrame and save it (Schools)
+        df_schools.to_csv(school_file_path, index=False, mode='a', header=not os.path.isfile(school_file_path))
+
+    return df, df_schools  # Return the DataFrames for further manipulation if needed

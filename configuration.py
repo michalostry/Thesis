@@ -4,15 +4,15 @@
 
 configurations = [
     {
-        'num_iterations': 3,
-        'num_students': 10000,
-        'num_schools': 220,
+        'num_iterations': 1,
+        'num_students': 30,
+        'num_schools': 3,
         'grid_size': 5000,
-        'weights': (0.2, 0.2, 0.2, 0.4),  # Distance, Quality, Income_aspiration, Aspiration
+        'weights': (0.2, 0.2, 0.2, 1),  # Distance, Quality, Income_aspiration, Aspiration
         'noise_sd': 20,
-        'noise_type': 'income_based_tiered_noise',          #income_based_tiered_noise or constant
+        'noise_type': 'constant',          #income_based_tiered_noise or constant
         'income_scaling_factor': 0.5,
-        'debug_ids': [],  # empty for no debug
+        'debug_ids': [0],  # empty for no debug
         'school_capacity_min': 25,
         'school_capacity_max': 75,
         'config_name': "testing income_based_tiered_noise",
